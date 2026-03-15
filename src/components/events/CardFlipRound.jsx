@@ -11,7 +11,7 @@ import { OPTION_LABELS, CARD_COVERS } from '../../utils/eventTypes';
    - Challenge Card → shows a question (with optional negative marking)
    ─────────────────────────────────────────────────────────────────────────── */
 
-function CardFace({ card, isFront, isFlipped, onStartQuiz, teams, selectedTeam, setSelectedTeam, isTopicCard }) {
+function CardFace({ card, isFront, isFlipped, onStartQuiz, teams, selectedTeamsLayer, selectedTeam, setSelectedTeam, isTopicCard }) {
   const cover = CARD_COVERS.find(c => c.id === card.coverImage) || CARD_COVERS[0];
 
   return (
@@ -22,7 +22,7 @@ function CardFace({ card, isFront, isFlipped, onStartQuiz, teams, selectedTeam, 
       WebkitBackfaceVisibility: 'hidden',
       borderRadius: 24,
       display: 'flex', flexDirection: 'column',
-      padding: '32px',
+      padding: isFront ? '32px' : '20px',
       ...(isFront
         ? {
             backgroundImage: cover.gradient,
@@ -35,10 +35,8 @@ function CardFace({ card, isFront, isFlipped, onStartQuiz, teams, selectedTeam, 
           }
         : {
             transform: 'rotateY(180deg)',
-            background: card.isChallenge
-              ? 'linear-gradient(135deg, rgba(231,76,60,0.15), rgba(192,57,43,0.1))'
-              : 'linear-gradient(135deg, rgba(52,152,219,0.15), rgba(41,128,185,0.1))',
-            border: `3px solid ${card.isChallenge ? 'var(--error)' : 'var(--accent)'}`,
+            background: 'linear-gradient(135deg, rgba(231,76,60,0.15), rgba(192,57,43,0.1))',
+            border: '3px solid var(--error)',
             alignItems: 'center', justifyContent: 'flex-start',
             backgroundColor: 'var(--bg-secondary)',
           }),
@@ -52,26 +50,25 @@ function CardFace({ card, isFront, isFlipped, onStartQuiz, teams, selectedTeam, 
         </>
       ) : (
         <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>{card.icon || (card.isChallenge ? '🎯' : '📚')}</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: card.isChallenge ? 'var(--error)' : 'var(--accent)', marginBottom: 8 }}>
-              {card.topic || (card.isChallenge ? 'Challenge Time!' : 'Topic Info')}
+          <div style={{ textAlign: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>{card.icon || '🎯'}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--error)', marginBottom: 4 }}>
+              {card.topic || 'Challenge Time!'}
             </div>
-            <div style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
               {card.instructions || 'Read the question carefully.'}
             </div>
           </div>
 
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
             {/* Team Selection */}
-            {card.isChallenge && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span style={{ fontSize: 14, color: 'var(--text-muted)', textAlign: 'center', fontWeight: 600 }}>Assign card to team:</span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', fontWeight: 600 }}>Assign card to team:</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
                   {teams.map(team => {
                     const isSelectedHere = selectedTeam === team;
                     // Check if team is assigned to ANY OTHER card
-                    const isAssignedElsewhere = Object.entries(selectedTeamsLayer).some(([idx, t]) => t === team && Number(idx) !== card.index);
+                    const isAssignedElsewhere = Object.entries(selectedTeamsLayer || {}).some(([idx, t]) => t === team && Number(idx) !== card.index);
                     const isDisabled = isAssignedElsewhere && !isSelectedHere;
 
                     return (
@@ -97,16 +94,15 @@ function CardFace({ card, isFront, isFlipped, onStartQuiz, teams, selectedTeam, 
                   })}
                 </div>
               </div>
-            )}
 
             {/* Start Quiz Action */}
             <button
-              className={`btn ${card.isChallenge ? 'btn-primary' : 'btn-secondary'}`}
+              className="btn btn-primary"
               onClick={(e) => { e.stopPropagation(); onStartQuiz(); }}
-              disabled={card.isChallenge && !selectedTeam}
-              style={{ padding: '16px', fontSize: 18, width: '100%', marginTop: 8 }}
+              disabled={!selectedTeam}
+              style={{ padding: '12px', fontSize: 16, width: '100%', flexShrink: 0 }}
             >
-              {card.isChallenge ? 'Start Quiz' : 'Mark as Done'}
+              Start Quiz
             </button>
           </div>
         </div>
@@ -193,13 +189,13 @@ export default function CardFlipRound({ event, teams, scores, onComplete }) {
     SFX.select?.();
     const card = cards[index];
 
-    if (card.isChallenge && card.subQuestions && card.subQuestions.length > 0) {
+    if (card.subQuestions && card.subQuestions.length > 0) {
       setActiveCard({ ...card, index });
       setCurrentSubIndex(0);
       setSelectedOption(null);
       setAnswerRevealed(false);
     } else {
-      // It's a topic card (or empty challenge), mark complete
+      // It has no subquestions, just mark it complete
       const assignedTeam = selectedTeamsLayer[index];
       setCardResults((prev) => ({ ...prev, [index]: { completed: true, team: assignedTeam } }));
     }

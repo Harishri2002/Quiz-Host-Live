@@ -26,8 +26,7 @@ export default function MasterRound({ event, teams, scores, onComplete }) {
   if (totalQuestions === 0) {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 48 }}>🧠</div>
-        <p>No questions in this event. Add questions in the Event Editor.</p>
+        <p style={{ fontSize: 16 }}>No questions in this event. Add questions in the Event Editor.</p>
       </div>
     );
   }
@@ -88,8 +87,7 @@ export default function MasterRound({ event, teams, scores, onComplete }) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 18 }}>🧠</span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: 'hsl(280,70%,60%)', textTransform: 'uppercase', letterSpacing: 1 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'hsl(280,70%,60%)', textTransform: 'uppercase', letterSpacing: 2 }}>
             {config.name || 'Master Questions'}
           </span>
         </div>
@@ -111,10 +109,11 @@ export default function MasterRound({ event, teams, scores, onComplete }) {
             color: i === Math.min(hintsUsed, 3) ? '#fff' : 'var(--text-muted)',
             border: `1px solid ${i === Math.min(hintsUsed, 3) ? pointColors[i] : 'var(--border)'}`,
             transition: 'all 0.3s',
+            boxShadow: i === Math.min(hintsUsed, 3) ? `0 2px 8px ${pointColors[i]}40` : 'none',
           }}>
-            {i === 0 ? '🌟' : i === 1 ? '💛' : i === 2 ? '🟠' : '🔴'} {pts} pts
-            <span style={{ fontSize: 10, marginLeft: 4, opacity: 0.7 }}>
-              {i === 0 ? '(no hints)' : `(${i} hint${i > 1 ? 's' : ''})`}
+            {pts} pts
+            <span style={{ fontSize: 10, marginLeft: 6, opacity: 0.8, textTransform: 'uppercase', letterSpacing: 1 }}>
+              {i === 0 ? 'No Hints' : `${i} Hint${i > 1 ? 's' : ''}`}
             </span>
           </div>
         ))}
@@ -181,7 +180,7 @@ export default function MasterRound({ event, teams, scores, onComplete }) {
                   }}
                 >
                   <div style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>
-                    💡 Hint {showingHint + 1}
+                    Hint {showingHint + 1}
                   </div>
                   <div style={{ fontSize: 16, color: 'var(--text-primary)' }}>
                     {hints[showingHint]}
@@ -210,8 +209,8 @@ export default function MasterRound({ event, teams, scores, onComplete }) {
             <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>
               {currentQuestion?.answer || currentQuestion?.options?.[currentQuestion?.correctOptionIndex] || '—'}
             </div>
-            <div style={{ fontSize: 13, color: 'var(--warning)', marginTop: 8, fontWeight: 600 }}>
-              Worth: {currentPoints} points {hintsUsed === 0 ? '🌟 (No hints used!)' : `(${hintsUsed} hint${hintsUsed > 1 ? 's' : ''} used)`}
+            <div style={{ fontSize: 13, color: 'var(--warning)', marginTop: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+              Worth: {currentPoints} points {hintsUsed === 0 ? '— No hints used' : `— ${hintsUsed} hint${hintsUsed > 1 ? 's' : ''} used`}
             </div>
           </motion.div>
         )}

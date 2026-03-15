@@ -299,9 +299,6 @@ function CardFlipConfig({ config, onChange }) {
       <ConfigField label="Event Name">
         <TextConfig value={config.name} onChange={(v) => update('name', v)} />
       </ConfigField>
-      <ConfigField label="Points per Challenge Card">
-        <NumberConfig value={config.pointsPerCard} onChange={(v) => update('pointsPerCard', v)} min={5} max={100} />
-      </ConfigField>
       <ConfigField label="Info">
         <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
           Add cards below using the question editor. Toggle "Is Challenge Card" per card.
@@ -318,18 +315,6 @@ function MasterRoundConfig({ config, onChange }) {
     <>
       <ConfigField label="Event Name">
         <TextConfig value={config.name} onChange={(v) => update('name', v)} />
-      </ConfigField>
-      <ConfigField label="Points — No Hints Used">
-        <NumberConfig value={config.points0} onChange={(v) => update('points0', v)} min={5} max={200} />
-      </ConfigField>
-      <ConfigField label="Points — After 1 Hint">
-        <NumberConfig value={config.points1} onChange={(v) => update('points1', v)} min={5} max={200} />
-      </ConfigField>
-      <ConfigField label="Points — After 2 Hints">
-        <NumberConfig value={config.points2} onChange={(v) => update('points2', v)} min={5} max={200} />
-      </ConfigField>
-      <ConfigField label="Points — After All 3 Hints">
-        <NumberConfig value={config.points3} onChange={(v) => update('points3', v)} min={5} max={200} />
       </ConfigField>
     </>
   );
@@ -640,16 +625,6 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
         {/* Card Flip specific fields */}
         {isCardFlip && (
           <>
-            <ConfigField label="Card Settings">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                <ToggleConfig value={form.isChallenge} onChange={(v) => update('isChallenge', v)} />
-                <span style={{ fontSize: 14, fontWeight: 600 }}>Is Challenge Card?</span>
-              </div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                If unchecked, this is a topic info card. If checked, it asks multiple questions.
-              </p>
-            </ConfigField>
-
             {/* Card Front Settings */}
             <ConfigField label="Card Front / Cover Design">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
@@ -678,7 +653,7 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
 
             <ConfigField label="Card Details (Shown on Back)">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <TextConfig value={form.icon || '🃏'} onChange={(v) => update('icon', v)} placeholder="Card Icon (Emoji)" />
+                <TextConfig value={form.icon ?? ''} onChange={(v) => update('icon', v)} placeholder="Card Icon (Emoji) - Leave blank for none" />
                 <TextConfig value={form.topic || ''} onChange={(v) => update('topic', v)} placeholder="Topic Title" />
                 <textarea
                   className="input"
@@ -691,10 +666,8 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
               </div>
             </ConfigField>
 
-            {form.isChallenge && (
-              <>
-                <ConfigField label="Scoring configuration">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <ConfigField label="Scoring configuration">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span style={{ fontSize: 13, width: 140 }}>Points for Correct:</span>
                       <NumberConfig value={form.points || 10} onChange={(v) => update('points', v)} min={1} max={100} />
@@ -713,24 +686,30 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
                 </ConfigField>
 
                 {/* Sub Questions for Challenge Card */}
-                <div style={{ marginTop: 24, padding: 16, background: 'var(--bg-tertiary)', borderRadius: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                    <h4 style={{ fontSize: 14, fontWeight: 700 }}>Questions on this Card</h4>
-                    <button className="btn btn-secondary" onClick={handleAddSubQuestion} style={{ fontSize: 12, padding: '6px 12px' }}>
+                <div style={{ marginTop: 24, padding: '24px 20px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <h4 style={{ fontSize: 15, fontWeight: 700 }}>Questions on this Card</h4>
+                    <button className="btn btn-secondary" onClick={handleAddSubQuestion} style={{ fontSize: 12, padding: '8px 14px' }}>
                       <Plus size={14} /> Add Question
                     </button>
                   </div>
 
                   {(!form.subQuestions || form.subQuestions.length === 0) ? (
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No questions added to this card yet.</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No questions added to this card yet.</div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                       {form.subQuestions.map((sq, sqIdx) => (
-                        <div key={sqIdx} style={{ padding: 16, background: 'var(--bg-card)', borderRadius: 8, border: '1px solid var(--border)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Question {sqIdx + 1}</span>
-                            <button onClick={() => handleRemoveSubQuestion(sqIdx)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}>
-                              <Trash2 size={14} />
+                        <div key={sqIdx} style={{ 
+                          padding: 20, 
+                          background: 'var(--bg-secondary)', 
+                          borderRadius: 12, 
+                          border: '1px solid var(--border)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>Question {sqIdx + 1}</span>
+                            <button onClick={() => handleRemoveSubQuestion(sqIdx)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', opacity: 0.8 }} onMouseEnter={(e)=>e.currentTarget.style.opacity=1} onMouseLeave={(e)=>e.currentTarget.style.opacity=0.8}>
+                              <Trash2 size={16} />
                             </button>
                           </div>
                           
@@ -739,13 +718,13 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
                             value={sq.questionText}
                             onChange={(e) => updateSubQuestion(sqIdx, 'questionText', e.target.value)}
                             placeholder="Type question here..."
-                            rows={2}
-                            style={{ resize: 'vertical', marginBottom: 12 }}
+                            rows={3}
+                            style={{ resize: 'vertical', marginBottom: 16, fontSize: 14 }}
                           />
 
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                             {sq.options.map((opt, oIdx) => (
-                              <div key={oIdx} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div key={oIdx} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                 <button
                                   onClick={() => updateSubQuestion(sqIdx, 'correctOptionIndex', oIdx)}
                                   style={{
@@ -774,8 +753,6 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
                     </div>
                   )}
                 </div>
-              </>
-            )}
           </>
         )}
 
@@ -893,7 +870,7 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
         )}
 
         {/* Explanation */}
-        {!isIdentify && (
+        {(!isIdentify && !isCardFlip) && (
           <ConfigField label="Explanation (shown after reveal, optional)">
             <TextConfig
               value={form.explanation}
@@ -1074,7 +1051,12 @@ export default function EventEditor() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {questions.map((q, i) => {
               const isIdentify = event.type === 'IDENTIFY';
-              const text = isIdentify ? (q.question || q.answer || 'Untitled') : (q.questionText || 'Untitled');
+              const isCardFlip = event.type === 'CARD_FLIP';
+              const text = isCardFlip 
+                ? (q.topic || 'Untitled') 
+                : isIdentify 
+                  ? (q.question || q.answer || 'Untitled') 
+                  : (q.questionText || 'Untitled');
               const correctLabel = q.options?.[q.correctOptionIndex] || '—';
 
               return (

@@ -222,12 +222,13 @@ export function createBlankQuestion(eventType) {
             return {
                 topic: '',
                 instructions: '',
-                isChallenge: false,
                 icon: '🃏',
                 coverImage: 'pattern-1',
                 negativeMarks: false,
                 negativePoints: 5,
-                subQuestions: [], // holds embedded questions for this card
+                subQuestions: [
+                    { questionText: '', options: ['', '', '', ''], correctOptionIndex: 0 }
+                ],
             };
         case EVENT_TYPES.MASTER_ROUND:
             return {

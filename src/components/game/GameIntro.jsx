@@ -46,8 +46,8 @@ export default function GameIntro({ onStart }) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             style={{
-              maxHeight: 100, maxWidth: 300, objectFit: 'contain',
-              marginBottom: 20,
+              maxHeight: 250, maxWidth: 600, objectFit: 'contain',
+              display: 'block', margin: '0 auto 32px auto',
               filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))',
             }}
           />

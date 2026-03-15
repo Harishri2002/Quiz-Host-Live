@@ -190,8 +190,9 @@ export default function SetupHub() {
                   width: '100%',
                   padding: '10px 20px',
                   background: isActive ? 'var(--bg-card-hover)' : 'transparent',
-                  borderLeft: isActive ? '3px solid var(--accent)' : '3px solid transparent',
-                  border: 'none',
+                  borderTop: 'none',
+                  borderRight: 'none',
+                  borderBottom: 'none',
                   borderLeft: isActive ? '3px solid var(--accent)' : '3px solid transparent',
                   color: isDisabled
                     ? 'var(--text-muted)'
