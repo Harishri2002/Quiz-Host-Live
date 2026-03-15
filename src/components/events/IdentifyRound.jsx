@@ -81,17 +81,23 @@ export default function IdentifyRound({ event, teams, scores, onComplete }) {
   };
 
   const handleRevealAnswer = () => {
-    if (selectedOption === null || answerRevealed) return;
+    if ((selectedOption === null && config.showOptions !== false) || answerRevealed) return;
     setAnswerRevealed(true);
     setBlurLevel(0);
     SFX.reveal();
-    const correct = selectedOption === currentQuestion.correctOptionIndex;
-    if (correct) {
-      setTimeout(() => SFX.correct(), 200);
+    if (config.showOptions !== false) {
+      const correct = selectedOption === currentQuestion.correctOptionIndex;
+      if (correct) {
+        setTimeout(() => SFX.correct(), 200);
+        setShowingCorrectBurst(true);
+        setTimeout(() => setShowingCorrectBurst(false), 2500);
+      } else {
+        setTimeout(() => SFX.wrong(), 200);
+      }
+    } else {
+      // Just visually celebrate the reveal when no options are present
       setShowingCorrectBurst(true);
       setTimeout(() => setShowingCorrectBurst(false), 2500);
-    } else {
-      setTimeout(() => SFX.wrong(), 200);
     }
   };
 
@@ -322,7 +328,7 @@ export default function IdentifyRound({ event, teams, scores, onComplete }) {
 
             {showingCorrectBurst && <CorrectBurst />}
           </div>
-        ) : answerRevealed && options.length > 0 ? (
+        ) : answerRevealed ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -337,7 +343,7 @@ export default function IdentifyRound({ event, teams, scores, onComplete }) {
               Correct Answer
             </span>
             <span style={{ fontSize: 24, fontWeight: 600, color: 'var(--text-primary)' }}>
-              {options[currentQuestion.correctOptionIndex] || 'N/A'}
+              {currentQuestion.answer || options[currentQuestion.correctOptionIndex] || 'N/A'}
             </span>
             {showingCorrectBurst && <CorrectBurst />}
           </motion.div>

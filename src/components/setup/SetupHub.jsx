@@ -133,12 +133,21 @@ export default function SetupHub() {
           {tabs.map((tab) => {
             const isActive = setupTab === tab.id;
             const Icon = tab.icon;
-            const isDisabled = tab.id === 'editor' && !activeEventId;
+            const isDisabled = tab.id === 'editor' && (!gameData?.sequence || gameData.sequence.length === 0);
+
+            const handleTabClick = () => {
+              if (isDisabled) return;
+              if (tab.id === 'editor' && !activeEventId && gameData?.sequence?.length > 0) {
+                useUIStore.getState().setActiveEvent(gameData.sequence[0].id);
+              } else {
+                setSetupTab(tab.id);
+              }
+            };
 
             return (
               <button
                 key={tab.id}
-                onClick={() => !isDisabled && setSetupTab(tab.id)}
+                onClick={handleTabClick}
                 disabled={isDisabled}
                 style={{
                   display: 'flex',

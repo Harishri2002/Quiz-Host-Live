@@ -303,7 +303,7 @@ const CONFIG_PANELS = {
 
 // ── Question Edit Modal ──────────────────
 
-function QuestionEditModal({ question, eventType, optionsCount, onSave, onClose }) {
+function QuestionEditModal({ question, eventType, optionsCount, teams = [], onSave, onClose }) {
   const [form, setForm] = useState({ ...question });
   const [mediaPreview, setMediaPreview] = useState(question.mediaFile || null);
   const [audioEl, setAudioEl] = useState(null);
@@ -348,10 +348,18 @@ function QuestionEditModal({ question, eventType, optionsCount, onSave, onClose 
       input.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
-          const url = URL.createObjectURL(file);
-          update('mediaFile', url);
-          update('mediaFileName', file.name);
-          setMediaPreview(url);
+          if (file.size > 2 * 1024 * 1024) {
+             // 2MB warning because localStorage has a 5MB limit
+             console.warn('Large file: might exceed localStorage limits.');
+          }
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const base64 = ev.target.result;
+            update('mediaFile', base64);
+            update('mediaFileName', file.name);
+            setMediaPreview(base64);
+          };
+          reader.readAsDataURL(file);
         }
       };
       input.click();
@@ -567,6 +575,23 @@ function QuestionEditModal({ question, eventType, optionsCount, onSave, onClose 
             style={{ resize: 'vertical', minHeight: 50 }}
           />
         </ConfigField>
+
+        {/* Target Team (for Lightning/RapidFire) */}
+        {(eventType === 'LIGHTNING' || eventType === 'RAPID_FIRE') && (
+          <ConfigField label="Target Team (Optional)">
+            <select
+              className="input"
+              value={form.targetTeam || ''}
+              onChange={(e) => update('targetTeam', e.target.value)}
+              style={{ width: '100%', cursor: 'pointer' }}
+            >
+              <option value="">Any / All Teams</option>
+              {teams.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </ConfigField>
+        )}
 
         {/* Answer (for Identify) */}
         {isIdentify && (
@@ -864,6 +889,7 @@ export default function EventEditor() {
             question={editingQuestion}
             eventType={event.type}
             optionsCount={optionsCount}
+            teams={gameData?.meta?.teams || []}
             onSave={handleSaveQuestion}
             onClose={() => setEditingQuestion(null)}
           />

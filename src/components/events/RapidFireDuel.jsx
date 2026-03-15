@@ -23,36 +23,9 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
   const pointsPerWin = config.pointsPerWin || 25;
   const pointsPerQuestion = config.pointsPerQuestion || 5;
 
-  // Generate duel pairings based on format
-  const generateDuels = () => {
-    const duels = [];
-    if (teams.length < 2) return duels;
-    if (config.duelFormat === 'bracket') {
-      // Simple bracket: pairs in order
-      for (let i = 0; i < teams.length - 1; i += 2) {
-        duels.push([teams[i], teams[i + 1] || teams[0]]);
-      }
-    } else {
-      // Round-robin: every pair
-      for (let i = 0; i < teams.length; i++) {
-        for (let j = i + 1; j < teams.length; j++) {
-          duels.push([teams[i], teams[j]]);
-        }
-      }
-    }
-    return duels;
-  };
-
-  const duels = generateDuels();
-  const currentDuel = duels[duelIndex];
-  const isLastDuel = duelIndex >= duels.length - 1;
-
-  // Questions for current duel  
-  const duelStartQ = duelIndex * questionsPerDuel;
-  const duelQuestions = questions.slice(duelStartQ, duelStartQ + questionsPerDuel);
-  const currentQuestion = duelQuestions[questionIndex];
-
-  if (!currentDuel || duels.length === 0) {
+  const [selectedTeams, setSelectedTeams] = useSyncState('rp_selTeams', [teams[0] || 'Team 1', teams[1] || 'Team 2']);
+  
+  if (teams.length < 2) {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
         Not enough teams for duels
@@ -60,7 +33,15 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
     );
   }
 
-  const [team1, team2] = currentDuel;
+  const team1 = selectedTeams[0];
+  const team2 = selectedTeams[1];
+
+  // Filter questions for this duel
+  // Either unassigned, or assigned to one of the dueling teams
+  const duelPool = questions.filter(q => !q.targetTeam || q.targetTeam === '' || q.targetTeam === team1 || q.targetTeam === team2);
+  const duelStartQ = duelIndex * questionsPerDuel;
+  const duelQuestions = duelPool.slice(duelStartQ, duelStartQ + questionsPerDuel);
+  const currentQuestion = duelQuestions[questionIndex];
 
   const startDuel = () => {
     setPhase('active');
@@ -123,7 +104,11 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
   };
 
   const handleNextDuel = () => {
-    if (isLastDuel) { onComplete(); return; }
+    // If we've run out of total questions, onComplete
+    if (duelStartQ + questionsPerDuel >= duelPool.length) {
+       onComplete();
+       return;
+    }
     setDuelIndex((prev) => prev + 1);
     setPhase('intro');
     setQuestionIndex(0);
@@ -153,7 +138,7 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
           </span>
         </div>
         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-          Duel {duelIndex + 1} / {duels.length}
+          Duel {duelIndex + 1}
         </span>
       </div>
 
@@ -194,11 +179,25 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
               style={{ textAlign: 'center' }}
             >
               <Swords size={50} style={{ color: '#1ABC9C', marginBottom: 20 }} />
-              <h2 className="font-display" style={{ fontSize: 48, fontWeight: 700, marginBottom: 16 }}>
-                <span style={{ color: 'hsl(200, 70%, 55%)' }}>{team1}</span>
-                <span style={{ color: 'var(--text-muted)', margin: '0 16px' }}>vs</span>
-                <span style={{ color: 'hsl(350, 70%, 55%)' }}>{team2}</span>
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 40 }}>
+                <select 
+                  value={team1} 
+                  onChange={(e) => setSelectedTeams([e.target.value, team2])}
+                  className="input"
+                  style={{ fontSize: 24, fontWeight: 700, color: 'hsl(200, 70%, 55%)', textAlign: 'center', backgroundColor: 'var(--bg-card)' }}
+                >
+                  {teams.map(t => <option key={`t1-${t}`} value={t}>{t}</option>)}
+                </select>
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-muted)' }}>VS</div>
+                <select 
+                  value={team2} 
+                  onChange={(e) => setSelectedTeams([team1, e.target.value])}
+                  className="input"
+                  style={{ fontSize: 24, fontWeight: 700, color: 'hsl(350, 70%, 55%)', textAlign: 'center', backgroundColor: 'var(--bg-card)' }}
+                >
+                  {teams.map(t => <option key={`t2-${t}`} value={t}>{t}</option>)}
+                </select>
+              </div>
               <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 32 }}>
                 {questionsPerDuel} questions • Winner gets {pointsPerWin} bonus pts
               </p>
@@ -332,7 +331,7 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
 
               <button className="btn btn-primary btn-large" onClick={handleNextDuel}
                 style={{ fontSize: 16, padding: '14px 40px', gap: 8 }}>
-                <ChevronRight size={18} /> {isLastDuel ? 'End Round' : 'Next Duel'}
+                <ChevronRight size={18} /> Next Duel
               </button>
             </motion.div>
           )}

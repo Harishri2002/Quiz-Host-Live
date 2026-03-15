@@ -28,12 +28,20 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
     ? [...teams].sort(() => Math.random() - 0.5)
     : [...teams];
 
-  const questionsPerTeam = config.questionsPerTeam || 0;
-  const teamQuestions = questionsPerTeam > 0
-    ? questions.slice(currentTeamIndex * questionsPerTeam, (currentTeamIndex + 1) * questionsPerTeam)
-    : questions;
-
   const currentTeam = orderedTeams[currentTeamIndex];
+
+  const unassignedQuestions = questions.filter(q => !q.targetTeam || q.targetTeam === '');
+  const teamSpecificQuestions = questions.filter(q => q.targetTeam === currentTeam);
+
+  let teamQuestions = [];
+  if (teamSpecificQuestions.length > 0) {
+    teamQuestions = teamSpecificQuestions;
+  } else {
+    const questionsPerTeam = config.questionsPerTeam || 0;
+    teamQuestions = questionsPerTeam > 0
+      ? unassignedQuestions.slice(currentTeamIndex * questionsPerTeam, (currentTeamIndex + 1) * questionsPerTeam)
+      : unassignedQuestions;
+  }
   const currentQuestion = teamQuestions[questionIndex];
   const isLastTeam = currentTeamIndex >= orderedTeams.length - 1;
 
