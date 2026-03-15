@@ -233,7 +233,7 @@ export default function SetupHub() {
           <button
             className="btn btn-secondary"
             onClick={async () => {
-              const success = await useGameStore.getState().exportCurrentGame();
+              const success = await useGameStore.getState().exportGamePackage();
               if (success) alert('Game packaged successfully!');
             }}
             style={{ width: '100%', fontSize: 13, minHeight: 40, padding: '8px 12px' }}

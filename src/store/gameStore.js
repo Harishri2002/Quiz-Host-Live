@@ -242,11 +242,35 @@ const useGameStore = create((set, get) => ({
     },
 
     exportGamePackage: async () => {
+        const state = get();
+        const { filePath, gameData } = state;
+
         if (!isElectron()) {
-            alert('Game packaging features are only available in the Quiz-Host desktop app! In browser mode, please use "Save Game" to download the JSON project file.');
-            return false;
+            try {
+                // In browser mode, export is basically just downloading the JSON via a Blob
+                const dataStr = JSON.stringify({
+                    version: "1.0",
+                    isExportedPackage: false,
+                    ...gameData
+                }, null, 2);
+
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${gameData?.meta?.title || 'quiz_export'}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                return true;
+            } catch (err) {
+                console.error("Browser export failed", err);
+                alert("Failed to export game: " + err.message);
+                return false;
+            }
         }
-        const { filePath } = get();
+
         if (!filePath) {
             alert('Please save the game to a file first before exporting as a package.');
             return false;
