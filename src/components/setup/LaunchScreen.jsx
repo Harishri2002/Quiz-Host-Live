@@ -80,45 +80,53 @@ export default function LaunchScreen() {
       } catch {
         // ignore
       }
+    } else {
+      const browserRecents = useGameStore.getState().getRecentGames();
+      setRecentGames(browserRecents || []);
     }
   };
 
   const handleCreate = useCallback(async () => {
     setLoading(true);
-    const success = await createNewGame();
-    setLoading(false);
-    if (success) {
-      navigateTo('setup');
+    try {
+      const success = await createNewGame();
+      if (success) {
+        navigateTo('setup');
+      }
+    } finally {
+      setLoading(false);
     }
   }, [createNewGame, navigateTo]);
 
-  const handleOpen = useCallback(async () => {
+  const handleImportDesktop = useCallback(async () => {
     setLoading(true);
-    const success = await openGame();
-    setLoading(false);
-    if (success) {
-      navigateTo('setup');
+    try {
+      const success = await openGame();
+      if (success) {
+        navigateTo('setup');
+      }
+    } finally {
+      setLoading(false);
     }
   }, [openGame, navigateTo]);
 
   const handleOpenRecent = useCallback(async (filePath) => {
     setLoading(true);
-    const success = await openGameByPath(filePath);
-    setLoading(false);
-    if (success) {
-      navigateTo('setup');
+    try {
+      const success = await openGameByPath(filePath);
+      if (success) {
+        navigateTo('setup');
+      }
+    } finally {
+      setLoading(false);
     }
   }, [openGameByPath, navigateTo]);
 
-  const handleImport = useCallback(async () => {
-    setLoading(true);
-    const success = await useGameStore.getState().importGamePackage();
-    setLoading(false);
-    if (success) {
-      navigateTo('setup');
-      loadRecent(); // Refresh recents
-    }
-  }, [navigateTo]);
+  const [showLocalGames, setShowLocalGames] = useState(false);
+  const handleToggleLoadGame = () => {
+    setShowLocalGames(!showLocalGames);
+    if (!showLocalGames) loadRecent();
+  };
 
   return (
     <div style={{
@@ -270,7 +278,7 @@ export default function LaunchScreen() {
 
           <motion.button
             className="btn btn-secondary"
-            onClick={handleOpen}
+            onClick={handleToggleLoadGame}
             disabled={loading}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -285,7 +293,7 @@ export default function LaunchScreen() {
             }}
           >
             <FolderOpen size={20} />
-            Open Game
+            Load Game
           </motion.button>
         </motion.div>
 
@@ -297,7 +305,7 @@ export default function LaunchScreen() {
         >
           <motion.button
             className="btn btn-secondary"
-            onClick={handleImport}
+            onClick={handleImportDesktop}
             disabled={loading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -312,17 +320,18 @@ export default function LaunchScreen() {
             }}
           >
             <Download size={18} />
-            Import (.qmgz) Package
+            Import Game from File (.qmg/.json)
           </motion.button>
         </motion.div>
 
-        {/* Recent Games */}
+        {/* Saved Games */}
         <AnimatePresence>
-          {recentGames.length > 0 && (
+          {(showLocalGames || recentGames.length > 0) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
               style={{ width: '100%', maxWidth: 440 }}
             >
               <h3 style={{
@@ -333,20 +342,27 @@ export default function LaunchScreen() {
                 letterSpacing: 1.5,
                 marginBottom: 12,
               }}>
-                Recent Games
+                Saved Games
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {recentGames.map((game, i) => (
-                  <motion.div
-                    key={game.filePath}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + i * 0.1 }}
-                  >
-                    <RecentGameCard game={game} onOpen={handleOpenRecent} />
-                  </motion.div>
-                ))}
-              </div>
+              
+              {recentGames.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 12, border: '1px dashed var(--border)' }}>
+                  No local saved games found.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {recentGames.map((game, i) => (
+                    <motion.div
+                      key={game.filePath}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + i * 0.05 }}
+                    >
+                      <RecentGameCard game={game} onOpen={handleOpenRecent} />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

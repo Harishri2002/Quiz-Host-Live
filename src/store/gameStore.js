@@ -119,10 +119,10 @@ const useGameStore = create((set, get) => ({
         });
     },
 
-    openGameByPath: async (filePath) => {
+    openGameByPath: async (targetPath) => { // renamed internally to avoid shadowing
         if (isElectron()) {
             try {
-                const result = await window.electronAPI.file.openPath(filePath);
+                const result = await window.electronAPI.file.openPath(targetPath);
                 if (result) {
                     set({
                         gameData: result.data,
@@ -135,8 +135,46 @@ const useGameStore = create((set, get) => ({
             } catch (err) {
                 console.error('Failed to open game:', err);
             }
+        } else {
+            // Browser fallback
+            try {
+                const savedGamesJson = localStorage.getItem('quizhost_saved_games') || '[]';
+                const savedGames = JSON.parse(savedGamesJson);
+                const game = savedGames.find(g => g.filePath === targetPath);
+                if (game) {
+                    set({
+                        gameData: game.data,
+                        filePath: game.filePath,
+                        isDirty: false,
+                        lastSavedAt: game.data.meta?.lastSaved || game.lastOpened,
+                    });
+                    // Update last opened
+                    game.lastOpened = new Date().toISOString();
+                    localStorage.setItem('quizhost_saved_games', JSON.stringify(savedGames));
+                    return true;
+                }
+            } catch (err) {
+                console.error('Failed to open local game:', err);
+            }
         }
         return false;
+    },
+
+    getRecentGames: () => {
+        if (!isElectron()) {
+            try {
+                const savedGamesJson = localStorage.getItem('quizhost_saved_games') || '[]';
+                const savedGames = JSON.parse(savedGamesJson);
+                return savedGames.map(g => ({
+                    filePath: g.filePath,
+                    title: g.title,
+                    lastOpened: g.lastOpened
+                }));
+            } catch (err) {
+                console.error('Failed to get recent games', err);
+            }
+        }
+        return [];
     },
 
     saveGame: async () => {
@@ -160,12 +198,37 @@ const useGameStore = create((set, get) => ({
             return false;
         }
 
-        // Browser fallback: Save quietly to localStorage instead of spamming downloads
+        // Browser fallback: Save to localStorage
         if (!isElectron()) {
             try {
-                // Keep the JSON string small for localStorage, or just keep it in memory
-                // We'll just update the saveStatus to visually indicate it "saved" to memory
-                set({ isDirty: false, saveStatus: 'saved' });
+                const savedGamesJson = localStorage.getItem('quizhost_saved_games') || '[]';
+                let savedGames = JSON.parse(savedGamesJson);
+
+                let id = filePath;
+                if (!id || !id.startsWith('local_')) {
+                    id = `local_${uuidv4().slice(0, 8)}`;
+                }
+
+                const gameEntry = {
+                    filePath: id,
+                    title: gameData.meta.title || 'Untitled Quiz',
+                    lastOpened: new Date().toISOString(),
+                    data: {
+                        ...gameData,
+                        meta: {
+                            ...gameData.meta,
+                            lastSaved: new Date().toISOString()
+                        }
+                    }
+                };
+
+                savedGames = savedGames.filter(g => g.filePath !== id);
+                savedGames.unshift(gameEntry);
+                if (savedGames.length > 10) savedGames.pop();
+
+                localStorage.setItem('quizhost_saved_games', JSON.stringify(savedGames));
+
+                set({ isDirty: false, saveStatus: 'saved', filePath: id, lastSavedAt: new Date().toISOString() });
                 setTimeout(() => set({ saveStatus: 'idle' }), 2000);
                 return true;
             } catch (err) {

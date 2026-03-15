@@ -181,6 +181,9 @@ function LightningConfig({ config, onChange }) {
       <ConfigField label="Time per Team (seconds)">
         <NumberConfig value={config.timePerTeam} onChange={(v) => update('timePerTeam', v)} min={30} max={180} />
       </ConfigField>
+      <ConfigField label="Questions per Team (0 = all)">
+        <NumberConfig value={config.questionsPerTeam} onChange={(v) => update('questionsPerTeam', v)} min={0} max={50} />
+      </ConfigField>
       <ConfigField label="Points per Correct">
         <NumberConfig value={config.pointsPerCorrect} onChange={(v) => update('pointsPerCorrect', v)} min={1} max={50} />
       </ConfigField>

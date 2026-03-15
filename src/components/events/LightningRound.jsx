@@ -28,8 +28,13 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
     ? [...teams].sort(() => Math.random() - 0.5)
     : [...teams];
 
+  const questionsPerTeam = config.questionsPerTeam || 0;
+  const teamQuestions = questionsPerTeam > 0
+    ? questions.slice(currentTeamIndex * questionsPerTeam, (currentTeamIndex + 1) * questionsPerTeam)
+    : questions;
+
   const currentTeam = orderedTeams[currentTeamIndex];
-  const currentQuestion = questions[questionIndex];
+  const currentQuestion = teamQuestions[questionIndex];
   const isLastTeam = currentTeamIndex >= orderedTeams.length - 1;
 
   // Timer countdown
@@ -88,9 +93,11 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
 
   const advanceQuestion = () => {
     setShowAnswer(false);
-    if (questionIndex >= questions.length - 1 || timer <= 0) {
-      // Team's turn is over
+    if (timer <= 0) {
       setTimerActive(false);
+    } else if (questionIndex >= teamQuestions.length - 1) {
+      setTimerActive(false);
+      setQuestionIndex((prev) => prev + 1);
     } else {
       setQuestionIndex((prev) => prev + 1);
     }
@@ -188,7 +195,7 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
               {currentTeam}
             </h2>
             <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 8 }}>
-              {timePerTeam} seconds • {questions.length} questions available
+              {timePerTeam} seconds • {teamQuestions.length} questions available
             </p>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 32 }}>
               Answer as many questions as possible before time runs out!
