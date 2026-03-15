@@ -7,7 +7,6 @@ import { useSyncState } from '../../utils/syncManager';
 import SFX from '../../utils/soundManager';
 
 export default function LightningRound({ event, teams, scores, onComplete }) {
-  const isProjector = useUIStore((s) => s.isProjector);
 
   const [currentTeamIndex, setCurrentTeamIndex] = useSyncState('lt_teamIdx', 0);
   const [questionIndex, setQuestionIndex] = useSyncState('lt_qIdx', 0);
@@ -35,11 +34,10 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
 
   // Timer countdown
   useEffect(() => {
-    if (isProjector) return;
     if (!timerActive || timer <= 0) return;
     timerRef.current = setTimeout(() => setTimer((t) => t - 1), 1000);
     return () => clearTimeout(timerRef.current);
-  }, [timer, timerActive, isProjector]);
+  }, [timer, timerActive]);
 
   // Auto-stop when timer hits zero
   useEffect(() => {
@@ -195,8 +193,7 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 32 }}>
               Answer as many questions as possible before time runs out!
             </p>
-            {!isProjector && (
-              <motion.button
+            <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={startTeam}
@@ -205,7 +202,6 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
               >
                 <Zap size={20} /> Start Round
               </motion.button>
-            )}
           </motion.div>
         ) : timer <= 0 || !currentQuestion ? (
           /* Time's Up or No More Questions */
@@ -241,12 +237,10 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
                 </div>
               )}
             </div>
-            {!isProjector && (
-              <button className="btn btn-primary btn-large" onClick={handleNextTeam}
-                style={{ fontSize: 16, padding: '14px 36px', gap: 8 }}>
-                <ChevronRight size={18} /> {isLastTeam ? 'End Round' : `Next: ${orderedTeams[currentTeamIndex + 1]}`}
-              </button>
-            )}
+            <button className="btn btn-primary btn-large" onClick={handleNextTeam}
+              style={{ fontSize: 16, padding: '14px 36px', gap: 8 }}>
+              <ChevronRight size={18} /> {isLastTeam ? 'End Round' : `Next: ${orderedTeams[currentTeamIndex + 1]}`}
+            </button>
           </motion.div>
         ) : (
           /* Active Question */
@@ -291,29 +285,33 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
       </div>
 
       {/* Bottom Controls (when active question) */}
-      {!isProjector && teamStarted && timer > 0 && currentQuestion && (
+      {teamStarted && timer > 0 && currentQuestion && (
         <div style={{
           display: 'flex', gap: 10, justifyContent: 'center', alignItems: 'center',
-          padding: '16px 0 0', borderTop: '1px solid var(--border)', marginTop: 12,
+          flexWrap: 'wrap', padding: '16px 0 0',
+          borderTop: '1px solid var(--border)', marginTop: 12,
         }}>
-          <button className="btn btn-success" onClick={handleMarkCorrect}
-            style={{ minHeight: 48, fontSize: 15, padding: '10px 24px', gap: 8, background: 'var(--success)' }}>
-            <Check size={18} /> Correct
-          </button>
-          <button className="btn btn-secondary" onClick={handleMarkWrong}
-            style={{ minHeight: 48, fontSize: 15, padding: '10px 24px', gap: 8, color: 'var(--error)' }}>
-            <X size={18} /> Wrong
-          </button>
+          {!showAnswer ? (
+            <button className="btn btn-secondary" onClick={() => setShowAnswer(true)}
+              style={{ minHeight: 48, fontSize: 15, padding: '10px 24px' }}>
+              Show Answer
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-success" onClick={handleMarkCorrect}
+                style={{ padding: '10px 20px', fontSize: 14 }}>
+                <Check size={18} style={{ marginRight: 6 }} /> Correct
+              </button>
+              <button className="btn btn-error" onClick={handleMarkWrong}
+                style={{ padding: '10px 20px', fontSize: 14 }}>
+                <X size={18} style={{ marginRight: 6 }} /> Wrong
+              </button>
+            </div>
+          )}
           {config.passAllowed && (
             <button className="btn btn-secondary" onClick={handlePass}
               style={{ minHeight: 48, fontSize: 15, padding: '10px 24px', gap: 8 }}>
               <SkipForward size={18} /> Pass
-            </button>
-          )}
-          {!showAnswer && (
-            <button className="btn btn-secondary" onClick={() => setShowAnswer(true)}
-              style={{ minHeight: 48, fontSize: 13, padding: '10px 16px' }}>
-              Show Answer
             </button>
           )}
         </div>

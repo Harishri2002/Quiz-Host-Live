@@ -4,11 +4,6 @@ import { Pause, Monitor } from 'lucide-react';
 
 export default function PauseOverlay() {
   const togglePause = useUIStore((s) => s.togglePause);
-  const isProjector = useUIStore((s) => s.isProjector);
-
-  const handleOpenProjector = () => {
-    window.open(window.location.origin + '?projector=true', 'projector', 'width=1280,height=720');
-  };
 
   return (
     <motion.div
@@ -48,16 +43,6 @@ export default function PauseOverlay() {
         Resume Game
       </button>
 
-      {!isProjector && (
-        <button
-          className="btn btn-secondary"
-          onClick={handleOpenProjector}
-          style={{ marginTop: 4, padding: '8px 24px', fontSize: 13, background: 'transparent' }}
-        >
-          <Monitor size={16} />
-          Launch Projector Screen
-        </button>
-      )}
     </motion.div>
   );
 }

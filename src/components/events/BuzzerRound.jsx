@@ -46,9 +46,7 @@ function CircularTimer({ seconds, total, warning }) {
 }
 
 export default function BuzzerRound({ event, teams, scores, onComplete }) {
-  const isProjector = useUIStore((s) => s.isProjector);
   const gameData = useGameStore((s) => s.gameData);
-  const hideAnswers = isProjector && gameData?.settings?.hideAnswersOnProjector;
 
   const [questionIndex, setQuestionIndex] = useSyncState('buzz_qIdx', 0);
   const [selectedOption, setSelectedOption] = useSyncState('buzz_selOpt', null);
@@ -77,8 +75,6 @@ export default function BuzzerRound({ event, teams, scores, onComplete }) {
 
   // Timer tick effect
   useEffect(() => {
-    if (isProjector) return; // Only Host runs the timer
-    
     if (!timerActive || answerRevealed || timer === null) return;
     if (timer <= 0) {
       // Time's up
@@ -201,9 +197,8 @@ export default function BuzzerRound({ event, teams, scores, onComplete }) {
             {currentQuestion.questionText}
           </motion.h2>
         </AnimatePresence>
-
-        {/* Options (if enabled) */}
-        {config.showOptions && options.length > 0 && (
+        {/* Options */}
+        {config.showOptions !== false && options.length > 0 ? (
           <div style={{
             display: 'grid',
             gridTemplateColumns: options.length <= 2 ? '1fr' : 'repeat(2, 1fr)',
@@ -220,8 +215,8 @@ export default function BuzzerRound({ event, teams, scores, onComplete }) {
               let bg = 'var(--bg-card)';
               let borderColor = 'var(--border)';
               if (isSelected && !answerRevealed) { borderColor = 'var(--warning)'; bg = 'rgba(243, 156, 18, 0.1)'; }
-              if (isRevealedCorrect && !hideAnswers) { bg = 'rgba(39, 174, 96, 0.2)'; borderColor = 'var(--success)'; }
-              if (isWrongSelected && !hideAnswers) { bg = 'rgba(231, 76, 60, 0.2)'; borderColor = 'var(--error)'; }
+              if (isRevealedCorrect) { bg = 'rgba(39, 174, 96, 0.2)'; borderColor = 'var(--success)'; }
+              if (isWrongSelected) { bg = 'rgba(231, 76, 60, 0.2)'; borderColor = 'var(--error)'; }
 
               return (
                 <motion.button
@@ -242,13 +237,13 @@ export default function BuzzerRound({ event, teams, scores, onComplete }) {
                 >
                   <div style={{
                     width: 32, height: 32, borderRadius: 6,
-                    background: isRevealedCorrect && !hideAnswers ? 'var(--success)' : isWrongSelected && !hideAnswers ? 'var(--error)' : 'var(--bg-tertiary)',
+                    background: isRevealedCorrect ? 'var(--success)' : isWrongSelected ? 'var(--error)' : 'var(--bg-tertiary)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 14, fontWeight: 700,
-                    color: ((isRevealedCorrect || isWrongSelected) && !hideAnswers) ? '#fff' : 'var(--text-secondary)',
+                    color: (isRevealedCorrect || isWrongSelected) ? '#fff' : 'var(--text-secondary)',
                     flexShrink: 0,
                   }}>
-                    {isRevealedCorrect && !hideAnswers ? <Check size={16} /> : isWrongSelected && !hideAnswers ? <X size={16} /> : OPTION_LABELS[i]}
+                    {isRevealedCorrect ? <Check size={16} /> : isWrongSelected ? <X size={16} /> : OPTION_LABELS[i]}
                   </div>
                   <span style={{ fontSize: 16, fontWeight: 500 }}>{option}</span>
                 </motion.button>
@@ -256,11 +251,29 @@ export default function BuzzerRound({ event, teams, scores, onComplete }) {
             })}
             {showingCorrectBurst && <CorrectBurst />}
           </div>
-        )}
+        ) : answerRevealed && options.length > 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{
+              width: '100%', maxWidth: 700, padding: 24, borderRadius: 14,
+              background: 'rgba(39, 174, 96, 0.15)', border: '2px solid var(--success)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              textAlign: 'center'
+            }}
+          >
+            <span style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--success)', marginBottom: 8, fontWeight: 700 }}>
+              Correct Answer
+            </span>
+            <span style={{ fontSize: 24, fontWeight: 600, color: 'var(--text-primary)' }}>
+              {options[currentQuestion.correctOptionIndex] || 'N/A'}
+            </span>
+            {showingCorrectBurst && <CorrectBurst />}
+          </motion.div>
+        ) : null}
       </div>
 
       {/* Bottom Controls */}
-      {!isProjector && (
         <div style={{
           display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center',
           flexWrap: 'wrap', padding: '16px 0 0',
@@ -268,7 +281,7 @@ export default function BuzzerRound({ event, teams, scores, onComplete }) {
         }}>
         {!answerRevealed ? (
           <>
-            {config.showOptions && (
+            {config.showOptions !== false && (
               <div style={{ display: 'flex', gap: 6, marginRight: 12 }}>
                 {options.map((_, i) => (
                   <button key={i}
@@ -281,8 +294,9 @@ export default function BuzzerRound({ event, teams, scores, onComplete }) {
               </div>
             )}
             <button
-              className="btn btn-primary"
+              className={`btn btn-primary ${(selectedOption === null && config.showOptions !== false) ? 'btn-disabled' : ''}`}
               onClick={handleRevealAnswer}
+              disabled={selectedOption === null && config.showOptions !== false}
               style={{ minHeight: 48, fontSize: 15, padding: '10px 24px', gap: 8 }}
             >
               <Eye size={18} /> Show Answer
@@ -312,7 +326,6 @@ export default function BuzzerRound({ event, teams, scores, onComplete }) {
           </>
         )}
       </div>
-      )}
 
       {/* Points Floater */}
       <AnimatePresence>

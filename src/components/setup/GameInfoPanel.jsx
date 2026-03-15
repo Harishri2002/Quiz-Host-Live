@@ -273,40 +273,7 @@ export default function GameInfoPanel() {
         </div>
       </section>
 
-      {/* Projector Settings */}
-      <section style={{ marginBottom: 32 }}>
-        <h3 style={{
-          fontSize: 15,
-          fontWeight: 700,
-          color: 'var(--text-primary)',
-          marginBottom: 16,
-          borderBottom: '1px solid var(--border)',
-          paddingBottom: 8,
-        }}>
-          Projector & Display Settings
-        </h3>
-        
-        <label style={{
-          display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
-          padding: '12px 16px', background: 'var(--bg-card)',
-          border: '1px solid var(--border)', borderRadius: 10,
-        }}>
-          <input
-            type="checkbox"
-            checked={!!gameData?.settings?.hideAnswersOnProjector}
-            onChange={(e) => updateSettings({ hideAnswersOnProjector: e.target.checked })}
-            style={{ width: 18, height: 18, cursor: 'pointer' }}
-          />
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
-              Hide Answer Marking on Projector
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-              Prevents the audience from seeing green/red visual markings when an answer is revealed. Host still sees the markings.
-            </div>
-          </div>
-        </label>
-      </section>
+
     </div>
   );
 }

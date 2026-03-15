@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         copyMedia: (sourcePath, gameFilePath) =>
             ipcRenderer.invoke('file:copyMedia', { sourcePath, gameFilePath }),
         selectMedia: (type) => ipcRenderer.invoke('file:selectMedia', { type }),
+        getMediaPath: (gameFilePath) => ipcRenderer.invoke('file:getMediaPath', { gameFilePath }),
     },
 
     // Window controls

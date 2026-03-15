@@ -179,15 +179,6 @@ export default function SetupHub() {
         }}>
           <button
             className="btn btn-secondary"
-            onClick={handleOpenProjector}
-            style={{ width: '100%', fontSize: 13, minHeight: 40, padding: '8px 12px' }}
-          >
-            <Monitor size={16} />
-            Launch Projector
-          </button>
-
-          <button
-            className="btn btn-secondary"
             onClick={() => saveGame()}
             style={{ width: '100%', fontSize: 13, minHeight: 40, padding: '8px 12px' }}
           >

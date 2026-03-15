@@ -158,14 +158,14 @@ function BuzzerConfig({ config, onChange }) {
           { value: 'flipping', label: 'Flipping Numbers' },
         ]} />
       </ConfigField>
+      <ConfigField label="Show Options">
+        <ToggleConfig value={config.showOptions} onChange={(v) => update('showOptions', v)} />
+      </ConfigField>
       <ConfigField label="Warning Threshold (seconds)">
         <NumberConfig value={config.warningThreshold} onChange={(v) => update('warningThreshold', v)} min={3} max={15} />
       </ConfigField>
       <ConfigField label="Auto-reveal on Timeout">
         <ToggleConfig value={config.autoRevealOnTimeout} onChange={(v) => update('autoRevealOnTimeout', v)} />
-      </ConfigField>
-      <ConfigField label="Show Options">
-        <ToggleConfig value={config.showOptions} onChange={(v) => update('showOptions', v)} />
       </ConfigField>
     </>
   );

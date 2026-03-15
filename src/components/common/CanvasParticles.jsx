@@ -28,6 +28,14 @@ export default function CanvasParticles({ variant = 'dust', color = 'rgba(255, 2
     // Initial resize
     resize();
     window.addEventListener('resize', resize);
+    
+    // Resolve CSS variable color if needed
+    let resolvedColor = color;
+    if (color.startsWith('var(')) {
+      // Extract the variable name, e.g., --accent
+      const varName = color.slice(4, -1).trim();
+      resolvedColor = getComputedStyle(document.body).getPropertyValue(varName).trim() || '#ffffff';
+    }
 
     // Initialize particles
     for (let i = 0; i < count; i++) {
@@ -85,7 +93,7 @@ export default function CanvasParticles({ variant = 'dust', color = 'rgba(255, 2
       ctx.beginPath();
       // Replace last parenthesis with opacity if color is rgba(), otherwise just apply globalAlpha
       ctx.globalAlpha = opacity * 0.3;
-      ctx.strokeStyle = color;
+      ctx.strokeStyle = resolvedColor;
       ctx.lineWidth = 1;
       ctx.moveTo(p1.x, p1.y);
       ctx.lineTo(p2.x, p2.y);
@@ -144,7 +152,7 @@ export default function CanvasParticles({ variant = 'dust', color = 'rgba(255, 2
         // Draw particle
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = color;
+        ctx.fillStyle = resolvedColor;
         ctx.globalAlpha = currentOpacity;
         ctx.fill();
         ctx.globalAlpha = 1.0;

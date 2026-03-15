@@ -10,9 +10,7 @@ import PointsFloat from '../animations/PointsFloat';
 import SFX from '../../utils/soundManager';
 
 export default function QARound({ event, teams, scores, onComplete }) {
-  const isProjector = useUIStore((s) => s.isProjector);
   const gameData = useGameStore((s) => s.gameData);
-  const hideAnswers = isProjector && gameData?.settings?.hideAnswersOnProjector;
   
   const [questionIndex, setQuestionIndex] = useSyncState('qa_qIdx', 0);
   const [selectedOption, setSelectedOption] = useSyncState('qa_selOpt', null);
@@ -194,19 +192,19 @@ export default function QARound({ event, teams, scores, onComplete }) {
 
             if (isSelected && !answerRevealed) {
               borderColor = 'var(--warning)';
-              bg = 'rgba(243, 156, 18, 0.15)';
+              bg = 'rgba(243, 156, 18, 0.1)';
             }
-            if (isRevealedCorrect && !hideAnswers) {
+            if (isRevealedCorrect) {
               bg = 'rgba(39, 174, 96, 0.2)';
               borderColor = 'var(--success)';
               scaleEffect = true;
             }
-            if (isWrongSelected && !hideAnswers) {
+            if (isWrongSelected) {
               bg = 'rgba(231, 76, 60, 0.2)';
               borderColor = 'var(--error)';
               shakeEffect = true;
             }
-            if (isUnselectedWrong && !hideAnswers) {
+            if (isUnselectedWrong) {
               opacity = 0.3;
             }
 
@@ -241,32 +239,30 @@ export default function QARound({ event, teams, scores, onComplete }) {
                   overflow: 'hidden',
                   boxShadow: isSelected && !answerRevealed
                     ? '0 0 15px rgba(243, 156, 18, 0.2)'
-                    : isRevealedCorrect && !hideAnswers
+                    : isRevealedCorrect
                       ? '0 0 20px rgba(39, 174, 96, 0.3)'
                       : 'none',
                 }}
               >
                 {/* Option Label */}
-                <div style={{
-                  width: 36, height: 36, borderRadius: 8,
-                  background: isRevealedCorrect && !hideAnswers
-                    ? 'var(--success)'
-                    : isSelected && !answerRevealed
-                      ? 'var(--warning)'
-                      : isWrongSelected && !hideAnswers
-                        ? 'var(--error)'
-                        : 'rgba(255, 255, 255, 0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 16, fontWeight: 700,
-                  color: (isSelected || isRevealedCorrect) && !hideAnswers ? '#fff' : 'var(--text-secondary)',
-                  flexShrink: 0,
-                  transition: 'all 0.3s ease',
-                }}>
-                  {isRevealedCorrect ? <Check size={18} /> :
-                   isWrongSelected ? <X size={18} /> :
-                   OPTION_LABELS[i]}
+                <div
+                  style={{
+                    width: 32, height: 32, borderRadius: 6,
+                    background: isRevealedCorrect ? 'var(--success)' : isWrongSelected ? 'var(--error)' : 'var(--bg-tertiary)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 14, fontWeight: 700,
+                    color: (isRevealedCorrect || isWrongSelected) ? '#fff' : 'var(--text-secondary)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {isRevealedCorrect ? (
+                    <Check size={16} />
+                  ) : isWrongSelected ? (
+                    <X size={16} />
+                  ) : (
+                    OPTION_LABELS[i]
+                  )}
                 </div>
-
                 {/* Option Text */}
                 <span style={{
                   fontSize: 18, fontWeight: 500,
@@ -279,17 +275,16 @@ export default function QARound({ event, teams, scores, onComplete }) {
           })}
 
           {/* Correct Burst Particles */}
-          {showingCorrectBurst && !hideAnswers && (
+          {showingCorrectBurst && (
             <CorrectBurst />
           )}
         </div>
       </div>
 
-      {/* Bottom Controls */}
-      {!isProjector && (
+      {/* Controls */}
         <div style={{
           display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center',
-          flexWrap: 'wrap', padding: '16px 0 0',
+          flexWrap: 'wrap', padding: '0 40px',
           borderTop: '1px solid var(--border)', marginTop: 12,
         }}>
         {!answerRevealed ? (
@@ -392,7 +387,6 @@ export default function QARound({ event, teams, scores, onComplete }) {
           </button>
         )}
       </div>
-      )}
 
       {/* Points Floater */}
       <AnimatePresence>

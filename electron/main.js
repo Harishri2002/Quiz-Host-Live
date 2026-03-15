@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, screen, protocol } = require('electron');
 const path = require('path');
 const fileManager = require('./fileManager');
 
@@ -39,6 +39,12 @@ function createMainWindow() {
 }
 
 app.whenReady().then(() => {
+    // Register custom protocol for loading local media files securely
+    protocol.registerFileProtocol('media', (request, callback) => {
+        const filePath = decodeURIComponent(request.url.replace('media://', ''));
+        callback({ path: path.normalize(`${filePath}`) });
+    });
+
     createMainWindow();
 
     app.on('activate', () => {
@@ -180,4 +186,9 @@ ipcMain.handle('file:selectMedia', async (event, { type }) => {
     });
     if (result.canceled || result.filePaths.length === 0) return null;
     return result.filePaths[0];
+});
+
+ipcMain.handle('file:getMediaPath', async (event, { gameFilePath }) => {
+    if (!gameFilePath) return null;
+    return path.join(path.dirname(gameFilePath), '_media');
 });

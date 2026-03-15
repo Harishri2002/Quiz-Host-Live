@@ -9,9 +9,7 @@ import CorrectBurst from '../animations/CorrectBurst';
 import SFX from '../../utils/soundManager';
 
 export default function WipeoutRound({ event, teams, scores, onComplete }) {
-  const isProjector = useUIStore((s) => s.isProjector);
   const gameData = useGameStore((s) => s.gameData);
-  const hideAnswers = isProjector && gameData?.settings?.hideAnswersOnProjector;
 
   const [questionIndex, setQuestionIndex] = useSyncState('wipe_qIdx', 0);
   const [phase, setPhase] = useSyncState('wipe_phs', 'wager'); // 'wager' → 'question' → 'reveal'
@@ -168,8 +166,7 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
                       max={basePoints}
                       value={wagers[team] ?? basePoints}
                       onChange={(e) => handleSetWager(team, e.target.value)}
-                      disabled={isProjector}
-                      style={{ width: 100, opacity: isProjector ? 0.6 : 1, pointerEvents: isProjector ? 'none' : 'auto' }}
+                      style={{ width: 100 }}
                     />
                     <span className="font-timer" style={{
                       fontSize: 18, fontWeight: 700, width: 40, textAlign: 'right',
@@ -181,12 +178,10 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
                 ))}
               </div>
 
-              {!isProjector && (
                 <button className="btn btn-primary btn-large" onClick={handleLockWagers}
                   style={{ marginTop: 24, fontSize: 16, padding: '14px 40px', background: '#E67E22' }}>
                   Lock Wagers & Show Question
                 </button>
-              )}
             </motion.div>
           )}
 
@@ -313,7 +308,6 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
       </div>
 
       {/* Bottom Controls */}
-      {!isProjector && (
         <div style={{
           display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center',
           flexWrap: 'wrap', padding: '16px 0 0',
@@ -364,7 +358,6 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
           </button>
         )}
       </div>
-      )}
     </div>
   );
 }

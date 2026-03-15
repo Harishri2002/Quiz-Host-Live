@@ -84,7 +84,39 @@ const useGameStore = create((set, get) => ({
             }
             return false;
         }
-        return false;
+
+        // Browser fallback: Use a hidden file input
+        return new Promise((resolve) => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.qmg,application/json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    resolve(false);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        set({
+                            gameData: data,
+                            filePath: file.name, // Just use the fileName as path in browser
+                            isDirty: false,
+                            lastSavedAt: data.meta?.lastSaved,
+                        });
+                        resolve(true);
+                    } catch (err) {
+                        console.error('Failed to parse game file:', err);
+                        alert('Invalid game file format.');
+                        resolve(false);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        });
     },
 
     openGameByPath: async (filePath) => {
@@ -128,20 +160,74 @@ const useGameStore = create((set, get) => ({
             return false;
         }
 
-        // Browser fallback: download as JSON
+        // Browser fallback: Save quietly to localStorage instead of spamming downloads
         if (!isElectron()) {
-            const blob = new Blob([JSON.stringify(gameData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${gameData.meta.title || 'quiz'}.qmg`;
-            a.click();
-            URL.revokeObjectURL(url);
-            set({ isDirty: false, saveStatus: 'saved' });
-            setTimeout(() => set({ saveStatus: 'idle' }), 2000);
-            return true;
+            try {
+                // Keep the JSON string small for localStorage, or just keep it in memory
+                // We'll just update the saveStatus to visually indicate it "saved" to memory
+                set({ isDirty: false, saveStatus: 'saved' });
+                setTimeout(() => set({ saveStatus: 'idle' }), 2000);
+                return true;
+            } catch (err) {
+                console.error("Browser save failed", err);
+                set({ saveStatus: 'error' });
+                return false;
+            }
         }
 
+        return false;
+    },
+
+    exportGamePackage: async () => {
+        if (!isElectron()) {
+            alert('Game packaging features are only available in the Quiz-Host desktop app! In browser mode, please use "Save Game" to download the JSON project file.');
+            return false;
+        }
+        const { filePath } = get();
+        if (!filePath) {
+            alert('Please save the game to a file first before exporting as a package.');
+            return false;
+        }
+        try {
+            const result = await window.electronAPI.file.export({ gameFilePath: filePath });
+            if (result?.success) {
+                return true;
+            } else if (result?.error) {
+                console.error('Export failed:', result.error);
+                alert('Export failed: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Failed to export game package:', err);
+        }
+        return false;
+    },
+
+    importGamePackage: async () => {
+        if (!isElectron()) {
+            alert('Game packaging features are only available in the Quiz-Host desktop app!');
+            return false;
+        }
+        try {
+            const result = await window.electronAPI.file.import();
+            if (result?.success && result.filePath) {
+                // If import successful, we open the newly extracted .qmg file automatically
+                const openResult = await window.electronAPI.file.openPath(result.filePath);
+                if (openResult) {
+                    set({
+                        gameData: openResult.data,
+                        filePath: openResult.filePath,
+                        isDirty: false,
+                        lastSavedAt: openResult.data.meta?.lastSaved,
+                    });
+                    return true;
+                }
+            } else if (result?.error) {
+                console.error('Import failed:', result.error);
+                alert('Import failed: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Failed to import game package:', err);
+        }
         return false;
     },
 

@@ -4,7 +4,6 @@ import useUIStore from '../../store/uiStore';
 import useGameStore from '../../store/gameStore';
 
 export default function GameIntro({ onStart }) {
-  const isProjector = useUIStore((s) => s.isProjector);
   const gameData = useGameStore((s) => s.gameData);
 
   const title = gameData?.meta?.title || 'Quiz-Host Live Game';
@@ -69,7 +68,6 @@ export default function GameIntro({ onStart }) {
           </motion.h2>
         )}
 
-        {!isProjector && (
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -88,7 +86,6 @@ export default function GameIntro({ onStart }) {
             <Play size={24} style={{ marginRight: 12 }} />
             Begin Event
           </motion.button>
-        )}
       </motion.div>
     </div>
   );

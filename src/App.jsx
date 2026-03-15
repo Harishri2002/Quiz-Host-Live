@@ -13,15 +13,6 @@ function App() {
   const currentScreen = useUIStore((s) => s.currentScreen);
   const gameData = useGameStore((s) => s.gameData);
 
-  // Detect projector mode
-  useEffect(() => {
-    const isProjector = new URLSearchParams(window.location.search).get('projector') === 'true';
-    if (isProjector) {
-      useUIStore.getState().setProjectorMode(true);
-      document.title = 'Quiz-Host Live (Projector)';
-    }
-  }, []);
-
   // Apply theme on load and when it changes
   useEffect(() => {
     const theme = gameData?.settings?.theme || 'dark_galaxy';

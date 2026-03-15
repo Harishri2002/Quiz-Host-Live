@@ -7,9 +7,7 @@ import { useSyncState } from '../../utils/syncManager';
 import SFX from '../../utils/soundManager';
 
 export default function RapidFireDuel({ event, teams, scores, onComplete }) {
-  const isProjector = useUIStore((s) => s.isProjector);
   const gameData = useGameStore((s) => s.gameData);
-  const hideAnswers = isProjector && gameData?.settings?.hideAnswersOnProjector;
 
   const [duelIndex, setDuelIndex] = useSyncState('rp_duelIdx', 0);
   const [questionIndex, setQuestionIndex] = useSyncState('duel_qIdx', 0);
@@ -204,13 +202,11 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
               <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 32 }}>
                 {questionsPerDuel} questions • Winner gets {pointsPerWin} bonus pts
               </p>
-              {!isProjector && (
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   onClick={startDuel} className="btn btn-primary btn-large"
                   style={{ fontSize: 18, padding: '16px 48px', background: '#1ABC9C' }}>
                   Start Duel
                 </motion.button>
-              )}
             </motion.div>
           )}
 
@@ -233,7 +229,7 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
               </h2>
 
               {/* Buzz Buttons */}
-              {!isProjector && !buzzedTeam && (
+              {!buzzedTeam && (
                 <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginBottom: 20 }}>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -277,7 +273,7 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
                 </motion.div>
               )}
 
-              {showAnswer && !hideAnswers && (
+              {showAnswer && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -334,19 +330,17 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
                 </div>
               </div>
 
-              {!isProjector && (
-                <button className="btn btn-primary btn-large" onClick={handleNextDuel}
-                  style={{ fontSize: 16, padding: '14px 40px', gap: 8 }}>
-                  <ChevronRight size={18} /> {isLastDuel ? 'End Round' : 'Next Duel'}
-                </button>
-              )}
+              <button className="btn btn-primary btn-large" onClick={handleNextDuel}
+                style={{ fontSize: 16, padding: '14px 40px', gap: 8 }}>
+                <ChevronRight size={18} /> {isLastDuel ? 'End Round' : 'Next Duel'}
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
       {/* Bottom Controls (during active) */}
-      {!isProjector && phase === 'active' && currentQuestion && (
+      {phase === 'active' && currentQuestion && (
         <div style={{
           display: 'flex', gap: 10, justifyContent: 'center', alignItems: 'center',
           padding: '16px 0 0', borderTop: '1px solid var(--border)', marginTop: 12,
