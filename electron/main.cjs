@@ -17,17 +17,33 @@ function createMainWindow() {
             preload: path.join(__dirname, 'preload.cjs'),
             contextIsolation: true,
             nodeIntegration: false,
+            // Required when loading local file:// resources (images, audio) on Windows
+            webSecurity: isDev ? true : false,
+            allowRunningInsecureContent: false,
         },
         show: false,
         backgroundColor: '#1A1A2E',
     });
 
+    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+
     if (isDev) {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+        mainWindow.loadFile(indexPath);
     }
+
+    // If the file fails to load, retry once then report
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+        if (!isDev) {
+            console.error('Failed to load:', errorCode, errorDescription);
+            // Retry loading after a short delay
+            setTimeout(() => {
+                if (mainWindow) mainWindow.loadFile(indexPath);
+            }, 500);
+        }
+    });
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();

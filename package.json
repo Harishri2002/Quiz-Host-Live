@@ -44,5 +44,38 @@
     "tailwindcss": "^4.2.1",
     "vite": "^8.0.0",
     "wait-on": "^9.0.4"
+  },
+  "build": {
+    "appId": "com.quizhost.live",
+    "productName": "Quiz-Host Live",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "icon": "build/icons/win/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "mac": {
+      "icon": "build/icons/mac/icon.icns",
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.education"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "menuCategory": "Quiz-Host Live",
+      "deleteAppDataOnUninstall": false
+    }
   }
 }
