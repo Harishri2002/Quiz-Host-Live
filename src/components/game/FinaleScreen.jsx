@@ -37,7 +37,7 @@ function ConfettiRain() {
           transition={{
             duration: p.duration,
             delay: p.delay,
-            repeat: 1,
+            repeat: Infinity,
             ease: 'linear',
           }}
           style={{
@@ -89,11 +89,10 @@ export default function FinaleScreen() {
     }}>
       {showConfetti && <ConfettiRain />}
 
-      {/* Trophy Glow */}
       <div style={{
         position: 'absolute',
         width: 500, height: 500, borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(241, 196, 15, 0.15) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(241, 196, 15, 0.12) 0%, transparent 70%)',
         top: '30%', left: '50%', transform: 'translate(-50%, -50%)',
         pointerEvents: 'none',
       }} />
@@ -104,12 +103,26 @@ export default function FinaleScreen() {
         transition={{ duration: 0.8, delay: 0.3 }}
         style={{ textAlign: 'center', zIndex: 2, maxWidth: 600 }}
       >
+        {/* Congrats heading */}
+        <motion.p
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          style={{
+            fontSize: 16, fontWeight: 700, letterSpacing: 6,
+            textTransform: 'uppercase', color: 'var(--text-muted)',
+            marginBottom: 8,
+          }}
+        >
+          🎉 Congratulations! 🎉
+        </motion.p>
+
         {/* Trophy */}
         <motion.div
           initial={{ scale: 0, rotate: -20 }}
-          animate={{ scale: 1, rotate: 0 }}
+          animate={{ scale: [0, 1.15, 1], rotate: 0 }}
           transition={{ delay: 0.5, type: 'spring', stiffness: 100, damping: 10 }}
-          style={{ fontSize: 80, marginBottom: 16 }}
+          style={{ fontSize: 90, marginBottom: 16 }}
         >
           🏆
         </motion.div>

@@ -30,8 +30,42 @@ export default function SetupHub() {
   const hasQuestions = gameData?.sequence?.some((e) => (e.questions?.length || 0) > 0);
   const canStart = hasEvents && hasQuestions;
 
+  const validateGame = () => {
+    const teams = gameData?.meta?.teams || [];
+    const sequence = gameData?.sequence || [];
+    const issues = [];
+    
+    sequence.forEach((event) => {
+      if (event.type === 'LIGHTNING') {
+        const questionsPerTeam = event.config?.questionsPerTeam || 0;
+        if (questionsPerTeam > 0) {
+          const questions = event.questions || [];
+          // Count per-slot assignments
+          for (let i = 0; i < teams.length; i++) {
+            const slotQuestions = questions.filter(q => q.targetTeamSlot === i);
+            const unassigned = questions.filter(q => q.targetTeamSlot === '' || q.targetTeamSlot === undefined || q.targetTeamSlot === null);
+            const effective = slotQuestions.length > 0 ? slotQuestions : unassigned.slice(i * questionsPerTeam, (i + 1) * questionsPerTeam);
+            if (effective.length < questionsPerTeam) {
+              const slotLabel = String.fromCharCode(65 + i);
+              issues.push(`"${event.config?.name || 'Lightning Round'}": Team ${slotLabel} (${teams[i] || `Slot ${slotLabel}`}) needs ${questionsPerTeam} questions but only has ${effective.length}.`);
+            }
+          }
+        }
+      }
+    });
+    
+    return issues;
+  };
+
   const handleStartGame = () => {
     if (!canStart) return;
+    const issues = validateGame();
+    if (issues.length > 0) {
+      const proceed = window.confirm(
+        `⚠️ Game has configuration issues:\n\n${issues.join('\n')}\n\nStart anyway?`
+      );
+      if (!proceed) return;
+    }
     saveGame();
     startGame();
     navigateTo('game');

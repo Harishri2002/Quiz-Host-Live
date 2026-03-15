@@ -8,6 +8,8 @@ import BuzzerRound from '../events/BuzzerRound';
 import LightningRound from '../events/LightningRound';
 import WipeoutRound from '../events/WipeoutRound';
 import RapidFireDuel from '../events/RapidFireDuel';
+import CardFlipRound from '../events/CardFlipRound';
+import MasterRound from '../events/MasterRound';
 import GameIntro from './GameIntro';
 import EventIntro from './EventIntro';
 import EventSummary from './EventSummary';
@@ -99,6 +101,10 @@ export default function GameScreen() {
         return <WipeoutRound {...eventProps} />;
       case 'RAPID_FIRE':
         return <RapidFireDuel {...eventProps} />;
+      case 'CARD_FLIP':
+        return <CardFlipRound {...eventProps} />;
+      case 'MASTER_ROUND':
+        return <MasterRound {...eventProps} />;
       default:
         return (
           <div style={{

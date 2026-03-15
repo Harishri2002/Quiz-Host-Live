@@ -1,34 +1,29 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, ChevronRight, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import { Eye, ChevronRight, AlertTriangle, TrendingUp, TrendingDown, Check, X } from 'lucide-react';
 import useGameStore from '../../store/gameStore';
-import useUIStore from '../../store/uiStore';
-import { useSyncState } from '../../utils/syncManager';
 import { OPTION_LABELS } from '../../utils/eventTypes';
 import CorrectBurst from '../animations/CorrectBurst';
 import SFX from '../../utils/soundManager';
 
 export default function WipeoutRound({ event, teams, scores, onComplete }) {
-  const gameData = useGameStore((s) => s.gameData);
-
-  const [questionIndex, setQuestionIndex] = useSyncState('wipe_qIdx', 0);
-  const [phase, setPhase] = useSyncState('wipe_phs', 'wager'); // 'wager' → 'question' → 'reveal'
-  const [wagers, setWagers] = useSyncState('wipe_wgrs', {});
-  const [selectedOption, setSelectedOption] = useSyncState('wipe_selOpt', null);
-  const [answerRevealed, setAnswerRevealed] = useSyncState('wipe_ansRev', false);
-  const [showingCorrectBurst, setShowingCorrectBurst] = useSyncState('wipe_burst', false);
-  const [results, setResults] = useSyncState('wipe_res', null); // { team: +/- amount }
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [phase, setPhase] = useState('wager'); // wager → question → reveal
+  const [wagers, setWagers] = useState({});
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [answerRevealed, setAnswerRevealed] = useState(false);
+  const [showingCorrectBurst, setShowingCorrectBurst] = useState(false);
+  const [results, setResults] = useState(null);
 
   const addScore = useGameStore((s) => s.addScore);
   const deductScore = useGameStore((s) => s.deductScore);
-  const config = event.config || {};
-  const questions = event.questions || [];
-  const currentQuestion = questions[questionIndex];
+
+  const config = event?.config || {};
+  const questions = event?.questions || [];
   const totalQuestions = questions.length;
-  const isLastQuestion = questionIndex >= totalQuestions - 1;
   const basePoints = config.basePoints || 20;
 
-  if (!currentQuestion) {
+  if (totalQuestions === 0) {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
         No questions in this event
@@ -36,12 +31,17 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
     );
   }
 
-  const handleSetWager = (team, wager) => {
-    setWagers((prev) => ({ ...prev, [team]: Math.max(config.allowZeroWager ? 0 : 1, parseInt(wager) || 0) }));
+  const currentQuestion = questions[questionIndex] || null;
+  const isLastQuestion = questionIndex >= totalQuestions - 1;
+  const options = currentQuestion?.options || [];
+
+  const handleSetWager = (team, value) => {
+    const min = config.allowZeroWager ? 0 : 1;
+    const val = Math.max(min, Math.min(basePoints, parseInt(value) || 0));
+    setWagers((prev) => ({ ...prev, [team]: val }));
   };
 
   const handleLockWagers = () => {
-    // Default any missing wager to basePoints
     const finalWagers = {};
     teams.forEach((t) => { finalWagers[t] = wagers[t] ?? basePoints; });
     setWagers(finalWagers);
@@ -50,23 +50,23 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
 
   const handleSelectOption = (index) => {
     if (answerRevealed || selectedOption !== null) return;
-    SFX.select();
+    SFX.select?.();
     setSelectedOption(index);
   };
 
   const handleRevealAnswer = () => {
-    if (selectedOption === null || answerRevealed) return;
-    SFX.reveal();
-    setAnswerRevealed(true);
+    if (selectedOption === null || answerRevealed || !currentQuestion) return;
+    SFX.reveal?.();
     const correct = selectedOption === currentQuestion.correctOptionIndex;
+    setAnswerRevealed(true);
+    setPhase('reveal');
     if (correct) {
-      setTimeout(() => SFX.correct(), 200);
+      setTimeout(() => SFX.correct?.(), 200);
       setShowingCorrectBurst(true);
       setTimeout(() => setShowingCorrectBurst(false), 2500);
     } else {
-      setTimeout(() => SFX.wrong(), 200);
+      setTimeout(() => SFX.wrong?.(), 200);
     }
-    setPhase('reveal');
   };
 
   const handleApplyResults = (correctTeams) => {
@@ -94,8 +94,6 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
     setShowingCorrectBurst(false);
     setResults(null);
   }, [isLastQuestion, onComplete]);
-
-  const options = currentQuestion.options || [];
 
   return (
     <div style={{
@@ -178,14 +176,14 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
                 ))}
               </div>
 
-                <button className="btn btn-primary btn-large" onClick={handleLockWagers}
-                  style={{ marginTop: 24, fontSize: 16, padding: '14px 40px', background: '#E67E22' }}>
-                  Lock Wagers & Show Question
-                </button>
+              <button className="btn btn-primary btn-large" onClick={handleLockWagers}
+                style={{ marginTop: 24, fontSize: 16, padding: '14px 40px', background: '#E67E22' }}>
+                Lock Wagers & Show Question
+              </button>
             </motion.div>
           )}
 
-          {(phase === 'question' || phase === 'reveal') && (
+          {(phase === 'question' || phase === 'reveal') && currentQuestion && (
             <motion.div
               key="question"
               initial={{ opacity: 0, y: 20 }}
@@ -212,7 +210,7 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
               {/* Question */}
               <h2 style={{
                 fontSize: 30, fontWeight: 600, lineHeight: 1.3,
-                color: 'var(--text-primary)', marginBottom: 28,
+                color: 'var(--text-primary)',
                 maxWidth: 700, margin: '0 auto 28px',
               }}>
                 {currentQuestion.questionText}
@@ -279,7 +277,7 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
                     display: 'flex', gap: 12, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap',
                   }}
                 >
-                  {teams.map((team, i) => {
+                  {teams.map((team) => {
                     const r = results[team] || '0';
                     const isGain = r.startsWith('+');
                     return (
@@ -308,11 +306,11 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
       </div>
 
       {/* Bottom Controls */}
-        <div style={{
-          display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center',
-          flexWrap: 'wrap', padding: '16px 0 0',
-          borderTop: '1px solid var(--border)', marginTop: 12,
-        }}>
+      <div style={{
+        display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center',
+        flexWrap: 'wrap', padding: '16px 0 0',
+        borderTop: '1px solid var(--border)', marginTop: 12,
+      }}>
         {phase === 'question' && !answerRevealed && (
           <>
             <div style={{ display: 'flex', gap: 6, marginRight: 12 }}>
@@ -325,8 +323,10 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
                 </button>
               ))}
             </div>
-            <button className={`btn btn-primary ${selectedOption === null ? 'btn-disabled' : ''}`}
-              onClick={handleRevealAnswer} disabled={selectedOption === null}
+            <button
+              className={`btn btn-primary ${selectedOption === null ? 'btn-disabled' : ''}`}
+              onClick={handleRevealAnswer}
+              disabled={selectedOption === null}
               style={{ minHeight: 48, fontSize: 15, padding: '10px 24px', gap: 8 }}>
               <Eye size={18} /> Show Answer
             </button>
@@ -336,9 +336,8 @@ export default function WipeoutRound({ event, teams, scores, onComplete }) {
         {phase === 'reveal' && !results && (
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Who got it right?</span>
-            {/* Quick buttons for common scenarios */}
             <button className="btn btn-success" onClick={() => handleApplyResults(teams)}
-              style={{ fontSize: 13, padding: '6px 14px' }}>All Correct</button>
+              style={{ fontSize: 13, padding: '6px 14px', background: 'var(--success)' }}>All Correct</button>
             <button className="btn btn-secondary" onClick={() => handleApplyResults([])}
               style={{ fontSize: 13, padding: '6px 14px', color: 'var(--error)' }}>None Correct</button>
             {teams.map((team) => (

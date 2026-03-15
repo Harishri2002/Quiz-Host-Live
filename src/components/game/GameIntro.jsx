@@ -8,7 +8,8 @@ export default function GameIntro({ onStart }) {
 
   const title = gameData?.meta?.title || 'Quiz-Host Live Game';
   const subtitle = gameData?.settings?.introSubtitle || 'Welcome to the Event';
-  const fontStyle = gameData?.settings?.introFont || 'display'; // display, sans, serif
+  const fontStyle = gameData?.settings?.introFont || 'display';
+  const logo = gameData?.meta?.logo || null;
 
   const getFontFamily = () => {
     switch (fontStyle) {
@@ -36,6 +37,22 @@ export default function GameIntro({ onStart }) {
           zIndex: 10,
         }}
       >
+        {/* Logo */}
+        {logo && (
+          <motion.img
+            src={logo}
+            alt="Quiz Logo"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            style={{
+              maxHeight: 100, maxWidth: 300, objectFit: 'contain',
+              marginBottom: 20,
+              filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))',
+            }}
+          />
+        )}
+
         <h1 style={{
           fontFamily: getFontFamily(),
           fontSize: 84,

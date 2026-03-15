@@ -30,11 +30,12 @@ export default function LightningRound({ event, teams, scores, onComplete }) {
 
   const currentTeam = orderedTeams[currentTeamIndex];
 
-  const unassignedQuestions = questions.filter(q => !q.targetTeam || q.targetTeam === '');
-  const teamSpecificQuestions = questions.filter(q => q.targetTeam === currentTeam);
+  const unassignedQuestions = questions.filter(q => q.targetTeamSlot === '' || q.targetTeamSlot === undefined || q.targetTeamSlot === null);
+  const teamSpecificQuestions = questions.filter(q => q.targetTeamSlot === currentTeamIndex);
 
   let teamQuestions = [];
   if (teamSpecificQuestions.length > 0) {
+    // Use questions specifically assigned to this team's slot
     teamQuestions = teamSpecificQuestions;
   } else {
     const questionsPerTeam = config.questionsPerTeam || 0;

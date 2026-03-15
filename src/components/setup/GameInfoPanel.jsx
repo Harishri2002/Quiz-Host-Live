@@ -9,6 +9,7 @@ export default function GameInfoPanel() {
   const updateTitle = useGameStore((s) => s.updateTitle);
   const updateTeams = useGameStore((s) => s.updateTeams);
   const updateSettings = useGameStore((s) => s.updateSettings);
+  const updateMeta = useGameStore((s) => s.updateMeta);
 
   const teams = gameData?.meta?.teams || [];
   const themeList = getThemeList();
@@ -33,6 +34,31 @@ export default function GameInfoPanel() {
   const handleThemeChange = (themeId) => {
     updateSettings({ theme: themeId });
     applyTheme(themeId);
+  };
+
+  const handleLogoUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (updateMeta) {
+          updateMeta({ logo: ev.target.result });
+        } else {
+          updateSettings({ logo: ev.target.result });
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
+  const handleClearLogo = () => {
+    if (updateMeta) updateMeta({ logo: null });
+    else updateSettings({ logo: null });
   };
 
   return (
@@ -113,6 +139,47 @@ export default function GameInfoPanel() {
           <option value="sans">Sans Serif (Inter) - Clean & Professional</option>
           <option value="serif">Serif (Georgia) - Classic & Elegant</option>
         </select>
+      </section>
+
+      {/* Logo Upload */}
+      <section style={{ marginBottom: 32 }}>
+        <label style={{
+          display: 'block', fontSize: 13, fontWeight: 600,
+          color: 'var(--text-secondary)', marginBottom: 8,
+          textTransform: 'uppercase', letterSpacing: 1,
+        }}>
+          Quiz Logo (shown on title screen)
+        </label>
+        {gameData?.meta?.logo ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <img
+              src={gameData.meta.logo}
+              alt="Quiz Logo"
+              style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 8, background: 'var(--bg-card)', border: '1px solid var(--border)', padding: 4 }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <button className="btn btn-secondary" onClick={handleLogoUpload} style={{ fontSize: 12, padding: '6px 12px' }}>Change Logo</button>
+              <button className="btn btn-secondary" onClick={handleClearLogo} style={{ fontSize: 12, padding: '6px 12px', color: 'var(--error)' }}>Remove Logo</button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={handleLogoUpload}
+            style={{
+              width: '100%', padding: '20px', borderRadius: 10,
+              border: '2px dashed var(--border)', background: 'var(--bg-card)',
+              cursor: 'pointer', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 8, color: 'var(--text-muted)',
+              transition: 'border-color 0.2s, background 0.2s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--bg-card-hover)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-card)'; }}
+          >
+            <span style={{ fontSize: 28 }}>🖼️</span>
+            <span style={{ fontSize: 13, fontWeight: 500 }}>Click to upload logo</span>
+            <span style={{ fontSize: 11 }}>PNG, JPG, SVG — shown on intro screen</span>
+          </button>
+        )}
       </section>
 
       {/* Team Names */}

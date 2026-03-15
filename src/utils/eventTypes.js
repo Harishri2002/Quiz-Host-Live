@@ -5,6 +5,8 @@ import {
     Zap,
     AlertTriangle,
     Swords,
+    Layers,
+    Brain,
 } from 'lucide-react';
 
 // Event type constants
@@ -15,6 +17,8 @@ export const EVENT_TYPES = {
     LIGHTNING: 'LIGHTNING',
     WIPEOUT: 'WIPEOUT',
     RAPID_FIRE: 'RAPID_FIRE',
+    CARD_FLIP: 'CARD_FLIP',
+    MASTER_ROUND: 'MASTER_ROUND',
 };
 
 // Event type metadata (for the library/UI)
@@ -57,9 +61,23 @@ export const EVENT_META = {
     RAPID_FIRE: {
         type: 'RAPID_FIRE',
         label: 'Rapid Fire Duel',
-        description: 'Head-to-head team duels',
+        description: 'Head-to-head team duel',
         icon: Swords,
         color: '#1ABC9C',
+    },
+    CARD_FLIP: {
+        type: 'CARD_FLIP',
+        label: 'Card Flip Round',
+        description: 'Pick a card — topic info or a challenge question',
+        icon: Layers,
+        color: '#8E44AD',
+    },
+    MASTER_ROUND: {
+        type: 'MASTER_ROUND',
+        label: 'Master Questions',
+        description: 'Use fewer hints, earn more points',
+        icon: Brain,
+        color: '#16A085',
     },
 };
 
@@ -100,11 +118,11 @@ export const EVENT_DEFAULTS = {
             timePerQuestion: 20,
             pointsPerCorrect: 20,
             showOptions: false,
-            timerStyle: 'circular', // circular | linear | digital | flipping
+            timerStyle: 'circular',
             warningThreshold: 5,
             autoRevealOnTimeout: true,
             penaltyOnPass: false,
-            questionTransition: 'slide', // slide | fade | flip | zoom
+            questionTransition: 'slide',
         },
     },
     LIGHTNING: {
@@ -115,7 +133,7 @@ export const EVENT_DEFAULTS = {
             pointsPerCorrect: 5,
             negativeMarking: false,
             passAllowed: true,
-            teamOrder: 'sequence', // sequence | random | mc_choice
+            teamOrder: 'sequence',
         },
     },
     WIPEOUT: {
@@ -134,10 +152,26 @@ export const EVENT_DEFAULTS = {
         config: {
             name: 'Rapid Fire Duel',
             questionsPerDuel: 5,
-            duelFormat: 'round-robin', // round-robin | bracket | mc_choice
             pointsPerWin: 25,
             pointsPerQuestion: 5,
             timeToBuzz: 8,
+        },
+    },
+    CARD_FLIP: {
+        config: {
+            name: 'Card Flip Round',
+            numCards: 6,
+            pointsPerCard: 10,
+        },
+        questions: [],
+    },
+    MASTER_ROUND: {
+        config: {
+            name: 'Master Questions',
+            points0: 30,  // no hints
+            points1: 20,  // 1 hint
+            points2: 10,  // 2 hints
+            points3: 5,   // all 3 hints
         },
     },
 };
@@ -154,7 +188,7 @@ export function createBlankQuestion(eventType) {
                 questionText: '',
                 options: ['', '', '', ''],
                 correctOptionIndex: 0,
-                points: null, // null = use event default
+                points: null,
                 mediaType: 'none',
                 mediaFile: null,
                 hint: '',
@@ -169,6 +203,28 @@ export function createBlankQuestion(eventType) {
                 options: ['', '', '', ''],
                 correctOptionIndex: 0,
                 points: null,
+            };
+        case EVENT_TYPES.CARD_FLIP:
+            return {
+                topic: '',
+                instructions: '',
+                isChallenge: false,
+                icon: '🃏',
+                negativeMarks: false,
+                negativePoints: 5,
+                subQuestions: [], // holds embedded questions for this card
+            };
+        case EVENT_TYPES.MASTER_ROUND:
+            return {
+                questionText: '',
+                answer: '',
+                hint1: '',
+                hint2: '',
+                hint3: '',
+                points0: null, // null = use event default
+                points1: null,
+                points2: null,
+                points3: null,
             };
         default:
             return { questionText: '', options: [], correctOptionIndex: 0 };

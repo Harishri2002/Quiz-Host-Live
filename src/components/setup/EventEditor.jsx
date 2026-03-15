@@ -292,6 +292,49 @@ function RapidFireConfig({ config, onChange }) {
   );
 }
 
+function CardFlipConfig({ config, onChange }) {
+  const update = (key, val) => onChange({ ...config, [key]: val });
+  return (
+    <>
+      <ConfigField label="Event Name">
+        <TextConfig value={config.name} onChange={(v) => update('name', v)} />
+      </ConfigField>
+      <ConfigField label="Points per Challenge Card">
+        <NumberConfig value={config.pointsPerCard} onChange={(v) => update('pointsPerCard', v)} min={5} max={100} />
+      </ConfigField>
+      <ConfigField label="Info">
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+          Add cards below using the question editor. Toggle "Is Challenge Card" per card.
+          Topic cards just show info; challenge cards have a question and optional negative marks.
+        </p>
+      </ConfigField>
+    </>
+  );
+}
+
+function MasterRoundConfig({ config, onChange }) {
+  const update = (key, val) => onChange({ ...config, [key]: val });
+  return (
+    <>
+      <ConfigField label="Event Name">
+        <TextConfig value={config.name} onChange={(v) => update('name', v)} />
+      </ConfigField>
+      <ConfigField label="Points — No Hints Used">
+        <NumberConfig value={config.points0} onChange={(v) => update('points0', v)} min={5} max={200} />
+      </ConfigField>
+      <ConfigField label="Points — After 1 Hint">
+        <NumberConfig value={config.points1} onChange={(v) => update('points1', v)} min={5} max={200} />
+      </ConfigField>
+      <ConfigField label="Points — After 2 Hints">
+        <NumberConfig value={config.points2} onChange={(v) => update('points2', v)} min={5} max={200} />
+      </ConfigField>
+      <ConfigField label="Points — After All 3 Hints">
+        <NumberConfig value={config.points3} onChange={(v) => update('points3', v)} min={5} max={200} />
+      </ConfigField>
+    </>
+  );
+}
+
 const CONFIG_PANELS = {
   QA_ROUND: QARoundConfig,
   IDENTIFY: IdentifyConfig,
@@ -299,29 +342,59 @@ const CONFIG_PANELS = {
   LIGHTNING: LightningConfig,
   WIPEOUT: WipeoutConfig,
   RAPID_FIRE: RapidFireConfig,
+  CARD_FLIP: CardFlipConfig,
+  MASTER_ROUND: MasterRoundConfig,
 };
 
 // ── Question Edit Modal ──────────────────
 
-function QuestionEditModal({ question, eventType, optionsCount, teams = [], onSave, onClose }) {
+function QuestionEditModal({ eventType, question, onClose, onSave, teamCount }) {
   const [form, setForm] = useState({ ...question });
-  const [mediaPreview, setMediaPreview] = useState(question.mediaFile || null);
+  const [mediaPreview, setMediaPreview] = useState(form.mediaFile || null);
   const [audioEl, setAudioEl] = useState(null);
+  const [itemType, setItemType] = useState(form.itemType || 'image');
+
+  const isIdentify = eventType === 'IDENTIFY';
+  const isCardFlip = eventType === 'CARD_FLIP';
+  const isMasterRound = eventType === 'MASTER_ROUND';
 
   const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
-  const updateOption = (index, val) => {
-    const opts = [...(form.options || [])];
-    opts[index] = val;
-    update('options', opts);
+  const updateOption = (idx, val) => {
+    const newOpts = [...form.options];
+    newOpts[idx] = val;
+    update('options', newOpts);
+  };
+
+  const handleAddSubQuestion = () => {
+    const newSq = { questionText: '', options: Array(optionsCount).fill(''), correctOptionIndex: 0 };
+    update('subQuestions', [...(form.subQuestions || []), newSq]);
+  };
+
+  const handleRemoveSubQuestion = (idx) => {
+    const arr = [...(form.subQuestions || [])];
+    arr.splice(idx, 1);
+    update('subQuestions', arr);
+  };
+
+  const updateSubQuestion = (idx, field, val) => {
+    const arr = [...(form.subQuestions || [])];
+    arr[idx] = { ...arr[idx], [field]: val };
+    update('subQuestions', arr);
+  };
+
+  const updateSubQuestionOption = (qIdx, optIdx, val) => {
+    const arr = [...(form.subQuestions || [])];
+    const newOpts = [...arr[qIdx].options];
+    newOpts[optIdx] = val;
+    arr[qIdx] = { ...arr[qIdx], options: newOpts };
+    update('subQuestions', arr);
   };
 
   const handleSave = () => {
     onSave(form);
     onClose();
   };
-
-  const isIdentify = eventType === 'IDENTIFY';
 
   // Check for Electron
   const isElectron = typeof window !== 'undefined' && window.electronAPI?.isElectron;
@@ -388,8 +461,6 @@ function QuestionEditModal({ question, eventType, optionsCount, teams = [], onSa
     audio.onended = () => setAudioEl(null);
     setAudioEl(audio);
   };
-
-  const itemType = form.itemType || 'image';
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -564,75 +635,232 @@ function QuestionEditModal({ question, eventType, optionsCount, teams = [], onSa
           </>
         )}
 
-        {/* Question Text */}
-        <ConfigField label={isIdentify ? 'Question / Hint (shown to players)' : 'Question Text'}>
-          <textarea
-            className="input"
-            value={isIdentify ? (form.question || '') : (form.questionText || '')}
-            onChange={(e) => update(isIdentify ? 'question' : 'questionText', e.target.value)}
-            placeholder={isIdentify ? 'e.g. "Identify this landmark" or leave empty' : 'Type your question here...'}
-            rows={2}
-            style={{ resize: 'vertical', minHeight: 50 }}
-          />
-        </ConfigField>
+        {/* Card Flip specific fields */}
+        {isCardFlip && (
+          <>
+            <ConfigField label="Card Settings">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <ToggleConfig value={form.isChallenge} onChange={(v) => update('isChallenge', v)} />
+                <span style={{ fontSize: 14, fontWeight: 600 }}>Is Challenge Card?</span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                If unchecked, this is a topic info card. If checked, it asks a question.
+              </p>
+            </ConfigField>
 
-        {/* Target Team (for Lightning/RapidFire) */}
-        {(eventType === 'LIGHTNING' || eventType === 'RAPID_FIRE') && (
-          <ConfigField label="Target Team (Optional)">
-            <select
+            <ConfigField label="Card Icon (Emoji)">
+              <TextConfig value={form.icon || '🃏'} onChange={(v) => update('icon', v)} />
+            </ConfigField>
+
+            {!form.isChallenge && (
+              <>
+                <ConfigField label="Topic Title">
+                  <TextConfig value={form.topic || ''} onChange={(v) => update('topic', v)} placeholder="e.g. Next Topic: Science" />
+                </ConfigField>
+                <ConfigField label="Instructions to Host">
+                  <textarea
+                    className="input"
+                    value={form.instructions || ''}
+                    onChange={(e) => update('instructions', e.target.value)}
+                    placeholder="e.g. Ask the audience to name 5 planets..."
+                    rows={3}
+                    style={{ resize: 'vertical' }}
+                  />
+                </ConfigField>
+              </>
+            )}
+
+            {form.isChallenge && (
+              <>
+                <ConfigField label="Negative Marking">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <ToggleConfig value={form.negativeMarks} onChange={(v) => update('negativeMarks', v)} />
+                    <span style={{ fontSize: 13 }}>Apply negative marks</span>
+                    {form.negativeMarks && (
+                      <NumberConfig value={form.negativePoints || 5} onChange={(v) => update('negativePoints', v)} min={1} max={50} />
+                    )}
+                  </div>
+                </ConfigField>
+
+                {/* Sub Questions for Challenge Card */}
+                <div style={{ marginTop: 24, padding: 16, background: 'var(--bg-tertiary)', borderRadius: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 700 }}>Questions on this Card</h4>
+                    <button className="btn btn-secondary" onClick={handleAddSubQuestion} style={{ fontSize: 12, padding: '6px 12px' }}>
+                      <Plus size={14} /> Add Question
+                    </button>
+                  </div>
+
+                  {(!form.subQuestions || form.subQuestions.length === 0) ? (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No questions added to this card yet.</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {form.subQuestions.map((sq, sqIdx) => (
+                        <div key={sqIdx} style={{ padding: 16, background: 'var(--bg-card)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Question {sqIdx + 1}</span>
+                            <button onClick={() => handleRemoveSubQuestion(sqIdx)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}>
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                          
+                          <textarea
+                            className="input"
+                            value={sq.questionText}
+                            onChange={(e) => updateSubQuestion(sqIdx, 'questionText', e.target.value)}
+                            placeholder="Type question here..."
+                            rows={2}
+                            style={{ resize: 'vertical', marginBottom: 12 }}
+                          />
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {sq.options.map((opt, oIdx) => (
+                              <div key={oIdx} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <button
+                                  onClick={() => updateSubQuestion(sqIdx, 'correctOptionIndex', oIdx)}
+                                  style={{
+                                    width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                                    background: sq.correctOptionIndex === oIdx ? 'var(--success)' : 'var(--bg-tertiary)',
+                                    border: sq.correctOptionIndex === oIdx ? '2px solid var(--success)' : '1px solid var(--border)',
+                                    color: sq.correctOptionIndex === oIdx ? 'white' : 'var(--text-muted)',
+                                    cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                                  }}
+                                >
+                                  {OPTION_LABELS[oIdx]}
+                                </button>
+                                <input
+                                  className="input"
+                                  type="text"
+                                  value={opt}
+                                  onChange={(e) => updateSubQuestionOption(sqIdx, oIdx, e.target.value)}
+                                  placeholder={`Option ${OPTION_LABELS[oIdx]}`}
+                                  style={{ flex: 1, padding: '6px 10px', fontSize: 13 }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {/* Question Text */}
+        {!isCardFlip && (
+          <ConfigField label={isIdentify ? 'Question / Hint (shown to players)' : 'Question Text'}>
+            <textarea
               className="input"
-              value={form.targetTeam || ''}
-              onChange={(e) => update('targetTeam', e.target.value)}
-              style={{ width: '100%', cursor: 'pointer' }}
-            >
-              <option value="">Any / All Teams</option>
-              {teams.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+              value={isIdentify ? (form.question || '') : (form.questionText || '')}
+              onChange={(e) => update(isIdentify ? 'question' : 'questionText', e.target.value)}
+              placeholder={isIdentify ? 'e.g. "Identify this landmark" or leave empty' : 'Type your question here...'}
+              rows={2}
+              style={{ resize: 'vertical', minHeight: 50 }}
+            />
           </ConfigField>
         )}
 
-        {/* Answer (for Identify) */}
-        {isIdentify && (
+        {/* Master Round specific fields (Hints & Points) */}
+        {isMasterRound && (
+          <>
+            <ConfigField label="Progressive Hints">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <TextConfig value={form.hint1 || ''} onChange={(v) => update('hint1', v)} placeholder="Hint 1 (least helpful)" />
+                <TextConfig value={form.hint2 || ''} onChange={(v) => update('hint2', v)} placeholder="Hint 2 (more helpful)" />
+                <TextConfig value={form.hint3 || ''} onChange={(v) => update('hint3', v)} placeholder="Hint 3 (almost gives it away)" />
+              </div>
+            </ConfigField>
+            
+            <ConfigField label="Custom Point Tiers (leave blank for event defaults)">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>0 Hints</label>
+                  <NumberConfig value={form.points0 || ''} onChange={(v) => update('points0', v)} min={1} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>1 Hint</label>
+                  <NumberConfig value={form.points1 || ''} onChange={(v) => update('points1', v)} min={1} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>2 Hints</label>
+                  <NumberConfig value={form.points2 || ''} onChange={(v) => update('points2', v)} min={1} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>3 Hints</label>
+                  <NumberConfig value={form.points3 || ''} onChange={(v) => update('points3', v)} min={1} />
+                </div>
+              </div>
+            </ConfigField>
+          </>
+        )}
+
+        {/* Target Team (for Lightning/RapidFire) */}
+        {(eventType === 'LIGHTNING' || eventType === 'RAPID_FIRE') && (
+          <ConfigField label="Target Team Slot (Optional)">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <select
+                className="input"
+                value={form.targetTeamSlot ?? ''}
+                onChange={(e) => update('targetTeamSlot', e.target.value === '' ? '' : parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              >
+                <option value="">Any / All Teams</option>
+                {Array.from({ length: teamCount }, (_, i) => (
+                  <option key={i} value={i}>Team {String.fromCharCode(65 + i)} (Slot {i + 1})</option>
+                ))}
+              </select>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                Slot A = 1st team, Slot B = 2nd team, etc. (assigned at game start)
+              </span>
+            </div>
+          </ConfigField>
+        )}
+
+        {/* Answer (for Identify & Master Round) */}
+        {(isIdentify || isMasterRound) && (
           <ConfigField label="Answer">
             <TextConfig value={form.answer} onChange={(v) => update('answer', v)} placeholder="Correct answer text" />
           </ConfigField>
         )}
 
         {/* Options */}
-        <ConfigField label="Options (click to mark as correct)">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {(form.options || []).map((opt, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button
-                  onClick={() => update('correctOptionIndex', i)}
-                  style={{
-                    width: 32, height: 32, borderRadius: 6,
-                    background: form.correctOptionIndex === i ? 'var(--success)' : 'var(--bg-tertiary)',
-                    border: form.correctOptionIndex === i ? '2px solid var(--success)' : '1px solid var(--border)',
-                    color: form.correctOptionIndex === i ? 'white' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    fontSize: 13, fontWeight: 700,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {OPTION_LABELS[i]}
-                </button>
-                <input
-                  className="input"
-                  type="text"
-                  value={opt}
-                  onChange={(e) => updateOption(i, e.target.value)}
-                  placeholder={`Option ${OPTION_LABELS[i]}`}
-                  style={{ flex: 1 }}
-                />
-              </div>
-            ))}
-          </div>
-        </ConfigField>
+        {(!isMasterRound && !isCardFlip) && (
+          <ConfigField label="Options (click to mark as correct)">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {(form.options || []).map((opt, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    onClick={() => update('correctOptionIndex', i)}
+                    style={{
+                      width: 32, height: 32, borderRadius: 6,
+                      background: form.correctOptionIndex === i ? 'var(--success)' : 'var(--bg-tertiary)',
+                      border: form.correctOptionIndex === i ? '2px solid var(--success)' : '1px solid var(--border)',
+                      color: form.correctOptionIndex === i ? 'white' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      fontSize: 13, fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {OPTION_LABELS[i]}
+                  </button>
+                  <input
+                    className="input"
+                    type="text"
+                    value={opt}
+                    onChange={(e) => updateOption(i, e.target.value)}
+                    placeholder={`Option ${OPTION_LABELS[i]}`}
+                    style={{ flex: 1 }}
+                  />
+                </div>
+              ))}
+            </div>
+          </ConfigField>
+        )}
 
         {/* Explanation */}
         {!isIdentify && (
@@ -890,6 +1118,7 @@ export default function EventEditor() {
             eventType={event.type}
             optionsCount={optionsCount}
             teams={gameData?.meta?.teams || []}
+            teamCount={(gameData?.meta?.teams || []).length || 4}
             onSave={handleSaveQuestion}
             onClose={() => setEditingQuestion(null)}
           />

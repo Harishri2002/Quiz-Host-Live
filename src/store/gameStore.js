@@ -307,6 +307,13 @@ const useGameStore = create((set, get) => ({
         }));
     },
 
+    updateMeta: (metaFields) => {
+        set((s) => ({
+            gameData: { ...s.gameData, meta: { ...s.gameData.meta, ...metaFields } },
+            isDirty: true,
+        }));
+    },
+
     updateTeams: (teams) => {
         set((s) => {
             const oldScores = s.gameData.state.scores;

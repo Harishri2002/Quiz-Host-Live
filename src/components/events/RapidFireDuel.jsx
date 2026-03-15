@@ -37,8 +37,13 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
   const team2 = selectedTeams[1];
 
   // Filter questions for this duel
-  // Either unassigned, or assigned to one of the dueling teams
-  const duelPool = questions.filter(q => !q.targetTeam || q.targetTeam === '' || q.targetTeam === team1 || q.targetTeam === team2);
+  // Unassigned questions (no targetTeamSlot) or assigned to one of the dueling teams' slots
+  const team1SlotIndex = teams.indexOf(team1);
+  const team2SlotIndex = teams.indexOf(team2);
+  const duelPool = questions.filter(q => {
+    if (q.targetTeamSlot === '' || q.targetTeamSlot === undefined || q.targetTeamSlot === null) return true;
+    return q.targetTeamSlot === team1SlotIndex || q.targetTeamSlot === team2SlotIndex;
+  });
   const duelStartQ = duelIndex * questionsPerDuel;
   const duelQuestions = duelPool.slice(duelStartQ, duelStartQ + questionsPerDuel);
   const currentQuestion = duelQuestions[questionIndex];
@@ -94,7 +99,7 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
   };
 
   const finishDuel = () => {
-    // Award duel win bonus
+    // Award duel win bonus and immediately end round
     if (duelScores.team1 > duelScores.team2) {
       addScore(team1, pointsPerWin);
     } else if (duelScores.team2 > duelScores.team1) {
@@ -103,19 +108,6 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
     setPhase('result');
   };
 
-  const handleNextDuel = () => {
-    // If we've run out of total questions, onComplete
-    if (duelStartQ + questionsPerDuel >= duelPool.length) {
-       onComplete();
-       return;
-    }
-    setDuelIndex((prev) => prev + 1);
-    setPhase('intro');
-    setQuestionIndex(0);
-    setDuelScores({ team1: 0, team2: 0 });
-    setShowAnswer(false);
-    setBuzzedTeam(null);
-  };
 
   const winner = duelScores.team1 > duelScores.team2 ? team1 : duelScores.team2 > duelScores.team1 ? team2 : 'Tie';
 
@@ -329,9 +321,9 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
                 </div>
               </div>
 
-              <button className="btn btn-primary btn-large" onClick={handleNextDuel}
+              <button className="btn btn-primary btn-large" onClick={onComplete}
                 style={{ fontSize: 16, padding: '14px 40px', gap: 8 }}>
-                <ChevronRight size={18} /> Next Duel
+                <ChevronRight size={18} /> End Event
               </button>
             </motion.div>
           )}
