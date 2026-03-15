@@ -69,8 +69,50 @@ export default function GameInfoPanel() {
           value={gameData?.meta?.title || ''}
           onChange={(e) => updateTitle(e.target.value)}
           placeholder="Enter your quiz title..."
-          style={{ fontSize: 16, padding: '12px 16px' }}
+          style={{ fontSize: 16, padding: '12px 16px', marginBottom: 16 }}
         />
+
+        <label style={{
+          display: 'block',
+          fontSize: 13,
+          fontWeight: 600,
+          color: 'var(--text-secondary)',
+          marginBottom: 8,
+          textTransform: 'uppercase',
+          letterSpacing: 1,
+        }}>
+          Title Screen Subtitle
+        </label>
+        <input
+          className="input"
+          type="text"
+          value={gameData?.settings?.introSubtitle ?? 'Welcome to the Event'}
+          onChange={(e) => updateSettings({ introSubtitle: e.target.value })}
+          placeholder="e.g. Annual Tech Fest 2026"
+          style={{ fontSize: 14, padding: '10px 14px', marginBottom: 16 }}
+        />
+
+        <label style={{
+          display: 'block',
+          fontSize: 13,
+          fontWeight: 600,
+          color: 'var(--text-secondary)',
+          marginBottom: 8,
+          textTransform: 'uppercase',
+          letterSpacing: 1,
+        }}>
+          Title Font Style
+        </label>
+        <select
+          className="input"
+          value={gameData?.settings?.introFont || 'display'}
+          onChange={(e) => updateSettings({ introFont: e.target.value })}
+          style={{ fontSize: 14, padding: '10px 14px', width: '100%', cursor: 'pointer' }}
+        >
+          <option value="display">Display (Orbitron) - Sci-Fi & Modern</option>
+          <option value="sans">Sans Serif (Inter) - Clean & Professional</option>
+          <option value="serif">Serif (Georgia) - Classic & Elegant</option>
+        </select>
       </section>
 
       {/* Team Names */}
@@ -229,6 +271,41 @@ export default function GameInfoPanel() {
             </motion.button>
           ))}
         </div>
+      </section>
+
+      {/* Projector Settings */}
+      <section style={{ marginBottom: 32 }}>
+        <h3 style={{
+          fontSize: 15,
+          fontWeight: 700,
+          color: 'var(--text-primary)',
+          marginBottom: 16,
+          borderBottom: '1px solid var(--border)',
+          paddingBottom: 8,
+        }}>
+          Projector & Display Settings
+        </h3>
+        
+        <label style={{
+          display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+          padding: '12px 16px', background: 'var(--bg-card)',
+          border: '1px solid var(--border)', borderRadius: 10,
+        }}>
+          <input
+            type="checkbox"
+            checked={!!gameData?.settings?.hideAnswersOnProjector}
+            onChange={(e) => updateSettings({ hideAnswersOnProjector: e.target.checked })}
+            style={{ width: 18, height: 18, cursor: 'pointer' }}
+          />
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+              Hide Answer Marking on Projector
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+              Prevents the audience from seeing green/red visual markings when an answer is revealed. Host still sees the markings.
+            </div>
+          </div>
+        </label>
       </section>
     </div>
   );

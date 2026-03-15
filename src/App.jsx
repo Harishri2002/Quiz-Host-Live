@@ -18,7 +18,7 @@ function App() {
     const isProjector = new URLSearchParams(window.location.search).get('projector') === 'true';
     if (isProjector) {
       useUIStore.getState().setProjectorMode(true);
-      document.title = 'Quiz-Lab (Projector)';
+      document.title = 'Quiz-Host Live (Projector)';
     }
   }, []);
 

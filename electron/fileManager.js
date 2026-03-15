@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { app } = require('electron');
+const AdmZip = require('adm-zip');
 
 const RECENT_FILE = path.join(app.getPath('userData'), 'recent-games.json');
 const MAX_RECENT = 5;
@@ -134,10 +135,68 @@ function addToRecent(filePath, title) {
     }
 }
 
+/**
+ * Export a game to a Zip package (.qmgz)
+ * Packages the given .qmg file and its associated _media folder
+ */
+function exportGamePackage(gameFilePath, destZipPath) {
+    try {
+        const zip = new AdmZip();
+
+        // Add the .qmg file itself
+        zip.addLocalFile(gameFilePath);
+
+        // Check if there is a media folder
+        const gameDir = path.dirname(gameFilePath);
+        const gameName = path.basename(gameFilePath, '.qmg');
+        const mediaDir = path.join(gameDir, `${gameName}_media`);
+
+        if (fs.existsSync(mediaDir)) {
+            // Add the media folder contents to a folder with the same name in the zip
+            zip.addLocalFolder(mediaDir, `${gameName}_media`);
+        }
+
+        zip.writeZip(destZipPath);
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Import a game from a Zip package (.qmgz)
+ * Extracts the contents to a given destination folder
+ */
+function importGamePackage(zipFilePath, destFolder) {
+    try {
+        const zip = new AdmZip(zipFilePath);
+        zip.extractAllTo(destFolder, true);
+
+        // Find the .qmg file inside the extracted files to return the path
+        const zipEntries = zip.getEntries();
+        const qmgEntry = zipEntries.find((entry) => entry.entryName.endsWith('.qmg') && !entry.isDirectory);
+
+        if (!qmgEntry) {
+            throw new Error("Invalid package: No .qmg file found in the archive.");
+        }
+
+        const extractedQmgPath = path.join(destFolder, qmgEntry.entryName);
+
+        // Verify we can load it to ensure integrity and add to recent
+        loadGame(extractedQmgPath);
+
+        return { success: true, filePath: extractedQmgPath };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+}
+
 module.exports = {
     createNewGame,
     loadGame,
     saveGame,
     copyMediaFile,
     getRecentGames,
+    exportGamePackage,
+    importGamePackage,
 };

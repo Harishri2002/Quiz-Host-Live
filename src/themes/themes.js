@@ -1,4 +1,4 @@
-// Theme definitions for Quiz-Lab
+// Theme definitions for Quiz-Host Live
 // Each theme is applied via CSS custom properties on :root
 
 export const themes = {

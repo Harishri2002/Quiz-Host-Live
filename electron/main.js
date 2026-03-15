@@ -11,7 +11,7 @@ function createMainWindow() {
         height: 900,
         minWidth: 1024,
         minHeight: 700,
-        title: 'Quiz-Lab',
+        title: 'Quiz-Host Live',
         icon: path.join(__dirname, '..', 'assets', 'icon.png'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -61,7 +61,7 @@ ipcMain.handle('file:new', async () => {
     const result = await dialog.showSaveDialog(mainWindow, {
         title: 'Create New Quiz Game',
         defaultPath: 'Untitled Quiz.qmg',
-        filters: [{ name: 'Quiz-Lab Game', extensions: ['qmg'] }],
+        filters: [{ name: 'Quiz-Host Live Game', extensions: ['qmg'] }],
     });
     if (result.canceled) return null;
     const gameData = fileManager.createNewGame(result.filePath);
@@ -71,7 +71,7 @@ ipcMain.handle('file:new', async () => {
 ipcMain.handle('file:open', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
         title: 'Open Quiz Game',
-        filters: [{ name: 'Quiz-Lab Game', extensions: ['qmg'] }],
+        filters: [{ name: 'Quiz-Host Live Game', extensions: ['qmg'] }],
         properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return null;
@@ -88,7 +88,7 @@ ipcMain.handle('file:saveAs', async (event, { data }) => {
     const result = await dialog.showSaveDialog(mainWindow, {
         title: 'Save Quiz Game As',
         defaultPath: `${data.meta?.title || 'Untitled Quiz'}.qmg`,
-        filters: [{ name: 'Quiz-Lab Game', extensions: ['qmg'] }],
+        filters: [{ name: 'Quiz-Host Live Game', extensions: ['qmg'] }],
     });
     if (result.canceled) return null;
     fileManager.saveGame(result.filePath, data);
@@ -102,6 +102,39 @@ ipcMain.handle('file:getRecent', async () => {
 ipcMain.handle('file:openPath', async (event, filePath) => {
     const data = fileManager.loadGame(filePath);
     return { filePath, data };
+});
+
+ipcMain.handle('file:export', async (event, { gameFilePath }) => {
+    const defaultName = path.basename(gameFilePath).replace('.qmg', ' Package.qmgz');
+    const result = await dialog.showSaveDialog(mainWindow, {
+        title: 'Export Game Package (with Media)',
+        defaultPath: defaultName,
+        filters: [{ name: 'Quiz-Host Live Game Package', extensions: ['qmgz', 'zip'] }],
+    });
+    if (result.canceled) return null;
+
+    return fileManager.exportGamePackage(gameFilePath, result.filePath);
+});
+
+ipcMain.handle('file:import', async () => {
+    // 1. Select the .qmgz or .zip file
+    const openResult = await dialog.showOpenDialog(mainWindow, {
+        title: 'Import Game Package',
+        filters: [{ name: 'Quiz-Host Live Game Package', extensions: ['qmgz', 'zip'] }],
+        properties: ['openFile'],
+    });
+    if (openResult.canceled || openResult.filePaths.length === 0) return null;
+    const sourceZip = openResult.filePaths[0];
+
+    // 2. Select a destination directory to extract to
+    const destResult = await dialog.showOpenDialog(mainWindow, {
+        title: 'Select Destination Folder for Extracted Game',
+        properties: ['openDirectory', 'createDirectory']
+    });
+    if (destResult.canceled || destResult.filePaths.length === 0) return null;
+    const destFolder = destResult.filePaths[0];
+
+    return fileManager.importGamePackage(sourceZip, destFolder);
 });
 
 // Window controls

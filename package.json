@@ -1,5 +1,5 @@
 {
-  "name": "quiz-lab",
+  "name": "quiz-host-live",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -18,6 +18,7 @@
     "@tsparticles/engine": "^3.9.1",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.9.1",
+    "adm-zip": "^0.5.16",
     "framer-motion": "^12.36.0",
     "howler": "^2.2.4",
     "lucide-react": "^0.577.0",

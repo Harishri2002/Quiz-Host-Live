@@ -1,46 +1,10 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, FolderOpen, Clock, ChevronRight, Sparkles } from 'lucide-react';
+import { Plus, FolderOpen, Clock, ChevronRight, Sparkles, Download } from 'lucide-react';
 import useGameStore from '../../store/gameStore';
 import useUIStore from '../../store/uiStore';
 
-// Simple particle background using CSS
-function ParticleField() {
-  const particles = useMemo(() => {
-    return Array.from({ length: 50 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 3 + 1,
-      duration: Math.random() * 20 + 15,
-      delay: Math.random() * 10,
-      opacity: Math.random() * 0.4 + 0.1,
-    }));
-  }, []);
-
-  return (
-    <div style={{
-      position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none',
-    }}>
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          style={{
-            position: 'absolute',
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: p.size,
-            height: p.size,
-            borderRadius: '50%',
-            background: 'var(--accent)',
-            opacity: p.opacity,
-            animation: `float ${p.duration}s ease-in-out ${p.delay}s infinite`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+import CanvasParticles from '../common/CanvasParticles';
 
 function RecentGameCard({ game, onOpen }) {
   const title = game.title || 'Untitled Quiz';
@@ -87,8 +51,25 @@ export default function LaunchScreen() {
   const openGameByPath = useGameStore((s) => s.openGameByPath);
   const navigateTo = useUIStore((s) => s.navigateTo);
 
+  // State for window dimensions to pass to CanvasParticles
+  const [windowDimensions, setWindowDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
   useEffect(() => {
     loadRecent();
+
+    // Handle window resize for CanvasParticles
+    const handleResize = () => {
+      setWindowDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const loadRecent = async () => {
@@ -129,6 +110,16 @@ export default function LaunchScreen() {
     }
   }, [openGameByPath, navigateTo]);
 
+  const handleImport = useCallback(async () => {
+    setLoading(true);
+    const success = await useGameStore.getState().importGamePackage();
+    setLoading(false);
+    if (success) {
+      navigateTo('setup');
+      loadRecent(); // Refresh recents
+    }
+  }, [navigateTo]);
+
   return (
     <div style={{
       width: '100%',
@@ -142,7 +133,7 @@ export default function LaunchScreen() {
       background: 'var(--bg-primary)',
     }}>
       {/* Particle Background */}
-      <ParticleField />
+      <CanvasParticles variant="space" color="var(--accent)" count={60} />
 
       {/* Gradient Orbs */}
       <div style={{
@@ -198,16 +189,39 @@ export default function LaunchScreen() {
                 style={{
                   fontSize: 72,
                   fontWeight: 700,
-                  letterSpacing: 3,
+                  letterSpacing: 2,
                   background: `linear-gradient(135deg, var(--accent-light), var(--accent), var(--accent-dark))`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                   textTransform: 'uppercase',
                   lineHeight: 1.1,
+                  display: 'flex',
+                  alignItems: 'center'
                 }}
               >
-                Quiz-Lab
+                Quiz-Host
+                <span style={{ 
+                  fontSize: 20, 
+                  letterSpacing: 1,
+                  padding: '6px 14px', 
+                  borderRadius: 24, 
+                  background: 'rgba(39, 174, 96, 0.15)', 
+                  border: '1px solid var(--success)', 
+                  color: 'var(--success)', 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: 8, 
+                  marginLeft: 20,
+                  WebkitTextFillColor: 'var(--success)', // Override the gradient clip for badge
+                }}>
+                  <motion.div 
+                    animate={{ opacity: [1, 0.4, 1] }} 
+                    transition={{ repeat: Infinity, duration: 1.5 }} 
+                    style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success)' }} 
+                  />
+                  LIVE
+                </span>
               </h1>
             </div>
             <p style={{
@@ -217,7 +231,7 @@ export default function LaunchScreen() {
               letterSpacing: 2,
               textTransform: 'uppercase',
             }}>
-              College Quiz Event Manager
+              Quiz Event Manager
             </p>
           </motion.div>
         </div>
@@ -242,11 +256,12 @@ export default function LaunchScreen() {
             whileTap={{ scale: 0.97 }}
             style={{
               flex: 1,
-              padding: '16px 24px',
+              padding: '16px 12px',
               fontSize: 16,
               minHeight: 56,
               borderRadius: 12,
-              gap: 10,
+              gap: 8,
+              whiteSpace: 'nowrap',
             }}
           >
             <Plus size={20} />
@@ -261,15 +276,43 @@ export default function LaunchScreen() {
             whileTap={{ scale: 0.97 }}
             style={{
               flex: 1,
-              padding: '16px 24px',
+              padding: '16px 12px',
               fontSize: 16,
               minHeight: 56,
               borderRadius: 12,
-              gap: 10,
+              gap: 8,
+              whiteSpace: 'nowrap',
             }}
           >
             <FolderOpen size={20} />
             Open Game
+          </motion.button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          style={{ width: '100%', maxWidth: 440 }}
+        >
+          <motion.button
+            className="btn btn-secondary"
+            onClick={handleImport}
+            disabled={loading}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              width: '100%',
+              padding: '12px 12px',
+              fontSize: 15,
+              borderRadius: 12,
+              gap: 8,
+              background: 'transparent',
+              border: '1px dashed var(--border)',
+            }}
+          >
+            <Download size={18} />
+            Import (.qmgz) Package
           </motion.button>
         </motion.div>
 
@@ -318,7 +361,7 @@ export default function LaunchScreen() {
         color: 'var(--text-muted)',
         opacity: 0.6,
       }}>
-        Quiz-Lab v1.0.0
+        Quiz-Host Live v1.0.0
       </div>
     </div>
   );

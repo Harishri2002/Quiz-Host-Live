@@ -10,6 +10,8 @@ import SFX from '../../utils/soundManager';
 
 export default function IdentifyRound({ event, teams, scores, onComplete }) {
   const isProjector = useUIStore((s) => s.isProjector);
+  const gameData = useGameStore((s) => s.gameData);
+  const hideAnswers = isProjector && gameData?.settings?.hideAnswersOnProjector;
 
   const [questionIndex, setQuestionIndex] = useSyncState('id_qIdx', 0);
   const [selectedOption, setSelectedOption] = useSyncState('id_selOpt', null);
@@ -279,11 +281,11 @@ export default function IdentifyRound({ event, teams, scores, onComplete }) {
                 borderColor = 'var(--warning)';
                 bg = 'rgba(243, 156, 18, 0.1)';
               }
-              if (isRevealedCorrect) {
+              if (isRevealedCorrect && !hideAnswers) {
                 bg = 'rgba(39, 174, 96, 0.2)';
                 borderColor = 'var(--success)';
               }
-              if (isWrongSelected) {
+              if (isWrongSelected && !hideAnswers) {
                 bg = 'rgba(231, 76, 60, 0.2)';
                 borderColor = 'var(--error)';
               }
@@ -307,13 +309,13 @@ export default function IdentifyRound({ event, teams, scores, onComplete }) {
                 >
                   <div style={{
                     width: 32, height: 32, borderRadius: 6,
-                    background: isRevealedCorrect ? 'var(--success)' : isWrongSelected ? 'var(--error)' : 'var(--bg-tertiary)',
+                    background: isRevealedCorrect && !hideAnswers ? 'var(--success)' : isWrongSelected && !hideAnswers ? 'var(--error)' : 'var(--bg-tertiary)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 14, fontWeight: 700,
-                    color: (isRevealedCorrect || isWrongSelected) ? '#fff' : 'var(--text-secondary)',
+                    color: ((isRevealedCorrect || isWrongSelected) && !hideAnswers) ? '#fff' : 'var(--text-secondary)',
                     flexShrink: 0,
                   }}>
-                    {OPTION_LABELS[i]}
+                    {isRevealedCorrect && !hideAnswers ? <Check size={16} /> : isWrongSelected && !hideAnswers ? <X size={16} /> : OPTION_LABELS[i]}
                   </div>
                   <span style={{ fontSize: 15, fontWeight: 500 }}>{option}</span>
                 </motion.button>

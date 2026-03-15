@@ -11,6 +11,8 @@ import SFX from '../../utils/soundManager';
 
 export default function QARound({ event, teams, scores, onComplete }) {
   const isProjector = useUIStore((s) => s.isProjector);
+  const gameData = useGameStore((s) => s.gameData);
+  const hideAnswers = isProjector && gameData?.settings?.hideAnswersOnProjector;
   
   const [questionIndex, setQuestionIndex] = useSyncState('qa_qIdx', 0);
   const [selectedOption, setSelectedOption] = useSyncState('qa_selOpt', null);
@@ -86,7 +88,7 @@ export default function QARound({ event, teams, scores, onComplete }) {
       onComplete();
       return;
     }
-    setIsTransitioning(true);
+    // setIsTransitioning(true); // This variable is not defined in the provided code.
     setTimeout(() => {
       setQuestionIndex((prev) => prev + 1);
       setSelectedOption(null);
@@ -94,7 +96,7 @@ export default function QARound({ event, teams, scores, onComplete }) {
       setShowingCorrectBurst(false);
       setAwardedTeam(null);
       setPointsFloater(null);
-      setIsTransitioning(false);
+      // setIsTransitioning(false); // This variable is not defined in the provided code.
     }, 300);
   }, [isLastQuestion, onComplete]);
 
@@ -192,19 +194,19 @@ export default function QARound({ event, teams, scores, onComplete }) {
 
             if (isSelected && !answerRevealed) {
               borderColor = 'var(--warning)';
-              bg = 'rgba(243, 156, 18, 0.1)';
+              bg = 'rgba(243, 156, 18, 0.15)';
             }
-            if (isRevealedCorrect) {
+            if (isRevealedCorrect && !hideAnswers) {
               bg = 'rgba(39, 174, 96, 0.2)';
               borderColor = 'var(--success)';
               scaleEffect = true;
             }
-            if (isWrongSelected) {
+            if (isWrongSelected && !hideAnswers) {
               bg = 'rgba(231, 76, 60, 0.2)';
               borderColor = 'var(--error)';
               shakeEffect = true;
             }
-            if (isUnselectedWrong) {
+            if (isUnselectedWrong && !hideAnswers) {
               opacity = 0.3;
             }
 
@@ -239,7 +241,7 @@ export default function QARound({ event, teams, scores, onComplete }) {
                   overflow: 'hidden',
                   boxShadow: isSelected && !answerRevealed
                     ? '0 0 15px rgba(243, 156, 18, 0.2)'
-                    : isRevealedCorrect
+                    : isRevealedCorrect && !hideAnswers
                       ? '0 0 20px rgba(39, 174, 96, 0.3)'
                       : 'none',
                 }}
@@ -247,14 +249,16 @@ export default function QARound({ event, teams, scores, onComplete }) {
                 {/* Option Label */}
                 <div style={{
                   width: 36, height: 36, borderRadius: 8,
-                  background: isRevealedCorrect
+                  background: isRevealedCorrect && !hideAnswers
                     ? 'var(--success)'
-                    : isWrongSelected
-                      ? 'var(--error)'
-                      : 'var(--bg-tertiary)',
+                    : isSelected && !answerRevealed
+                      ? 'var(--warning)'
+                      : isWrongSelected && !hideAnswers
+                        ? 'var(--error)'
+                        : 'rgba(255, 255, 255, 0.1)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 16, fontWeight: 700,
-                  color: (isRevealedCorrect || isWrongSelected) ? '#fff' : 'var(--text-secondary)',
+                  color: (isSelected || isRevealedCorrect) && !hideAnswers ? '#fff' : 'var(--text-secondary)',
                   flexShrink: 0,
                   transition: 'all 0.3s ease',
                 }}>
@@ -275,7 +279,7 @@ export default function QARound({ event, teams, scores, onComplete }) {
           })}
 
           {/* Correct Burst Particles */}
-          {showingCorrectBurst && (
+          {showingCorrectBurst && !hideAnswers && (
             <CorrectBurst />
           )}
         </div>

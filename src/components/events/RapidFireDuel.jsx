@@ -8,8 +8,10 @@ import SFX from '../../utils/soundManager';
 
 export default function RapidFireDuel({ event, teams, scores, onComplete }) {
   const isProjector = useUIStore((s) => s.isProjector);
+  const gameData = useGameStore((s) => s.gameData);
+  const hideAnswers = isProjector && gameData?.settings?.hideAnswersOnProjector;
 
-  const [duelIndex, setDuelIndex] = useSyncState('duel_idx', 0);
+  const [duelIndex, setDuelIndex] = useSyncState('rp_duelIdx', 0);
   const [questionIndex, setQuestionIndex] = useSyncState('duel_qIdx', 0);
   const [phase, setPhase] = useSyncState('duel_phs', 'intro'); // 'intro' → 'active' → 'result'
   const [duelScores, setDuelScores] = useSyncState('duel_scores', { team1: 0, team2: 0 });
@@ -275,7 +277,7 @@ export default function RapidFireDuel({ event, teams, scores, onComplete }) {
                 </motion.div>
               )}
 
-              {showAnswer && (
+              {showAnswer && !hideAnswers && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

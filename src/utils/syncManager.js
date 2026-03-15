@@ -34,7 +34,9 @@ export function setupStoreSync(storeName, useStore) {
         // We check URL params directly here to avoid circular dep with uiStore
         const isProjector = new URLSearchParams(window.location.search).get('projector') === 'true';
         if (!isProjector) {
-            channel.postMessage({ type: 'SYNC_STATE', state });
+            // Strip functions from state to prevent DataCloneError
+            const cleanState = JSON.parse(JSON.stringify(state));
+            channel.postMessage({ type: 'SYNC_STATE', state: cleanState });
         }
     });
 
@@ -47,7 +49,8 @@ export function setupStoreSync(storeName, useStore) {
     // If we are the Host, listen for requests for full state and send it
     pingChannel.onmessage = (event) => {
         if (!isProjector && event.data.type === 'REQUEST_FULL_STATE' && event.data.store === storeName) {
-            channel.postMessage({ type: 'SYNC_STATE', state: useStore.getState() });
+            const cleanState = JSON.parse(JSON.stringify(useStore.getState()));
+            channel.postMessage({ type: 'SYNC_STATE', state: cleanState });
         }
     };
 

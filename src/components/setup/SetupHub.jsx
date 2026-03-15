@@ -1,13 +1,14 @@
 import { motion } from 'framer-motion';
 import {
   Info, Layers, Settings as SettingsIcon, Monitor, Play,
-  ArrowLeft, Save
+  ArrowLeft, Save, Download
 } from 'lucide-react';
 import useUIStore from '../../store/uiStore';
 import useGameStore from '../../store/gameStore';
 import GameInfoPanel from './GameInfoPanel';
 import SequenceBuilder from './SequenceBuilder';
 import EventEditor from './EventEditor';
+import CanvasParticles from '../common/CanvasParticles';
 
 const tabs = [
   { id: 'info', label: 'Game Info', icon: Info },
@@ -67,7 +68,11 @@ export default function SetupHub() {
       height: '100%',
       display: 'flex',
       background: 'var(--bg-primary)',
+      position: 'relative',
     }}>
+      {/* Subtle nodes particle effect for the setup area */}
+      <CanvasParticles variant="nodes" color="var(--text-muted)" count={40} />
+
       {/* Sidebar */}
       <div style={{
         width: 240,
@@ -188,6 +193,18 @@ export default function SetupHub() {
           >
             <Save size={16} />
             Save Game
+          </button>
+
+          <button
+            className="btn btn-secondary"
+            onClick={async () => {
+              const success = await useGameStore.getState().exportCurrentGame();
+              if (success) alert('Game packaged successfully!');
+            }}
+            style={{ width: '100%', fontSize: 13, minHeight: 40, padding: '8px 12px' }}
+          >
+            <Download size={16} />
+            Export Package
           </button>
 
           <motion.button

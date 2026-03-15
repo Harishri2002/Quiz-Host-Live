@@ -8,11 +8,13 @@ import BuzzerRound from '../events/BuzzerRound';
 import LightningRound from '../events/LightningRound';
 import WipeoutRound from '../events/WipeoutRound';
 import RapidFireDuel from '../events/RapidFireDuel';
+import GameIntro from './GameIntro';
 import EventIntro from './EventIntro';
 import EventSummary from './EventSummary';
 import EventTransition from './EventTransition';
 import MiniScoreboard from './MiniScoreboard';
 import PauseOverlay from './PauseOverlay';
+import CanvasParticles from '../common/CanvasParticles';
 import { EVENT_META } from '../../utils/eventTypes';
 
 export default function GameScreen() {
@@ -26,11 +28,19 @@ export default function GameScreen() {
   const teams = gameData?.meta?.teams || [];
   const scores = gameData?.state?.scores || {};
 
-  const [eventPhase, setEventPhase] = useState('intro');
+  const [eventPhase, setEventPhase] = useState('game_intro');
 
   useEffect(() => {
+    if (currentEventIndex === 0 && sequence.length > 0) {
+       setEventPhase('game_intro');
+    } else {
+       setEventPhase('intro');
+    }
+  }, [currentEventIndex, sequence.length]);
+
+  const handleGameIntroComplete = useCallback(() => {
     setEventPhase('intro');
-  }, [currentEventIndex]);
+  }, []);
 
   const handleIntroComplete = useCallback(() => {
     setEventPhase('active');
@@ -109,9 +119,25 @@ export default function GameScreen() {
       position: 'relative',
       overflow: 'hidden',
     }}>
+      {/* Background Particles for game screen */}
+      <CanvasParticles variant="dust" color="var(--accent)" count={40} />
+
       <MiniScoreboard teams={teams} scores={scores} />
 
       <AnimatePresence mode="wait">
+        {eventPhase === 'game_intro' && (
+          <motion.div
+            key="game_intro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <GameIntro onStart={handleGameIntroComplete} />
+          </motion.div>
+        )}
+
         {eventPhase === 'intro' && (
           <motion.div
             key="intro"
