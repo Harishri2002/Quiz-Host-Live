@@ -1,5 +1,9 @@
 # Quiz Lab (Quiz-Host-Live)
 
+<p align="center">
+  <img src="assets/icon.png" width="150" alt="Quiz Lab Logo">
+</p>
+
 A modern, interactive, and customizable quiz hosting application built with React and Electron. Quiz Lab is designed for live events, allowing hosts to create diverse rounds, assign teams, and manage live scores through a highly polished, broadcast-ready interface.
 
 ## 🌟 Key Features

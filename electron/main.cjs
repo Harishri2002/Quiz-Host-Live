@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, screen, protocol } = require('electron');
 const path = require('path');
-const fileManager = require('./fileManager');
+const fileManager = require('./fileManager.cjs');
 
 let mainWindow = null;
 const isDev = !app.isPackaged;
@@ -14,7 +14,7 @@ function createMainWindow() {
         title: 'Quiz-Host Live',
         icon: path.join(__dirname, '..', 'assets', 'icon.png'),
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(__dirname, 'preload.cjs'),
             contextIsolation: true,
             nodeIntegration: false,
         },
