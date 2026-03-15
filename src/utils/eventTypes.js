@@ -21,6 +21,20 @@ export const EVENT_TYPES = {
     MASTER_ROUND: 'MASTER_ROUND',
 };
 
+export const CARD_COVERS = [
+    { id: 'pattern-1', label: 'Polka Dots', gradient: 'radial-gradient(var(--bg-card) 15%, transparent 16%) 0 0, radial-gradient(var(--bg-card) 15%, transparent 16%) 8px 8px', bgSize: '16px 16px', bgColor: 'var(--accent)' },
+    { id: 'pattern-2', label: 'Checkerboard', gradient: 'conic-gradient(#555 90deg, #222 90deg 180deg, #555 180deg 270deg, #222 270deg)', bgSize: '40px 40px', bgColor: '#222' },
+    { id: 'pattern-3', label: 'Stripes (Diagonal)', gradient: 'repeating-linear-gradient(45deg, var(--bg-card), var(--bg-card) 10px, var(--bg-tertiary) 10px, var(--bg-tertiary) 20px)', bgSize: 'auto', bgColor: 'var(--bg-tertiary)' },
+    { id: 'pattern-4', label: 'Zig Zag', gradient: 'linear-gradient(135deg, rgba(255,255,255,0.1) 25%, transparent 25%) -50px 0, linear-gradient(225deg, rgba(255,255,255,0.1) 25%, transparent 25%) -50px 0, linear-gradient(315deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%)', bgSize: '100px 100px', bgColor: '#e74c3c' },
+    { id: 'pattern-5', label: 'Grid Lines', gradient: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)', bgSize: '20px 20px', bgColor: 'var(--bg-secondary)' },
+    { id: 'pattern-6', label: 'Honeycomb', gradient: 'radial-gradient(circle, transparent 20%, var(--bg-card) 20%, var(--bg-card) 80%, transparent 80%, transparent), radial-gradient(circle, transparent 20%, var(--bg-card) 20%, var(--bg-card) 80%, transparent 80%, transparent) 25px 25px, linear-gradient(#2ecc71 8px, transparent 8px) 0 -4px, linear-gradient(90deg, #2ecc71 8px, transparent 8px) -4px 0', bgSize: '50px 50px', bgColor: '#2ecc71' },
+    { id: 'pattern-7', label: 'Waves', gradient: 'radial-gradient(circle at 100% 50%, transparent 20%, rgba(255,255,255,.3) 21%, rgba(255,255,255,.3) 34%, transparent 35%, transparent), radial-gradient(circle at 0% 50%, transparent 20%, rgba(255,255,255,.3) 21%, rgba(255,255,255,.3) 34%, transparent 35%, transparent) 0 -50px', bgSize: '100px 100px', bgColor: '#3498db' },
+    { id: 'pattern-8', label: 'Diamonds', gradient: 'linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111), linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111)', bgSize: '20px 20px', bgColor: '#444' },
+    { id: 'pattern-9', label: 'Carbon Fiber', gradient: 'radial-gradient(black 15%, transparent 16%) 0 0, radial-gradient(black 15%, transparent 16%) 8px 8px, radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 0 1px, radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px', bgSize: '16px 16px', bgColor: '#282828' },
+    { id: 'pattern-10', label: 'Stars', gradient: 'radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px), radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px), radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px)', bgSize: '550px 550px, 350px 350px, 250px 250px', bgColor: 'black' },
+];
+
+
 // Event type metadata (for the library/UI)
 export const EVENT_META = {
     QA_ROUND: {
@@ -210,6 +224,7 @@ export function createBlankQuestion(eventType) {
                 instructions: '',
                 isChallenge: false,
                 icon: '🃏',
+                coverImage: 'pattern-1',
                 negativeMarks: false,
                 negativePoints: 5,
                 subQuestions: [], // holds embedded questions for this card

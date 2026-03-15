@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import useGameStore from '../../store/gameStore';
 import useUIStore from '../../store/uiStore';
-import { EVENT_META, EVENT_DEFAULTS, OPTION_LABELS, createBlankQuestion } from '../../utils/eventTypes';
+import { EVENT_META, EVENT_DEFAULTS, OPTION_LABELS, createBlankQuestion, CARD_COVERS } from '../../utils/eventTypes';
 
 // ── Config Field Renderers ──────────────────
 
@@ -348,7 +348,7 @@ const CONFIG_PANELS = {
 
 // ── Question Edit Modal ──────────────────
 
-function QuestionEditModal({ eventType, question, onClose, onSave, teamCount }) {
+function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, optionsCount = 4 }) {
   const [form, setForm] = useState({ ...question });
   const [mediaPreview, setMediaPreview] = useState(form.mediaFile || null);
   const [audioEl, setAudioEl] = useState(null);
@@ -477,7 +477,9 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount }) 
           marginBottom: 20,
         }}>
           <h3 style={{ fontSize: 18, fontWeight: 700 }}>
-            {question.id ? 'Edit Question' : 'Add Question'}
+            {question.id
+              ? (isCardFlip ? 'Edit Card' : 'Edit Question')
+              : (isCardFlip ? 'Add Card' : 'Add Question')}
           </h3>
           <button
             onClick={onClose}
@@ -644,41 +646,69 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount }) 
                 <span style={{ fontSize: 14, fontWeight: 600 }}>Is Challenge Card?</span>
               </div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                If unchecked, this is a topic info card. If checked, it asks a question.
+                If unchecked, this is a topic info card. If checked, it asks multiple questions.
               </p>
             </ConfigField>
 
-            <ConfigField label="Card Icon (Emoji)">
-              <TextConfig value={form.icon || '🃏'} onChange={(v) => update('icon', v)} />
+            {/* Card Front Settings */}
+            <ConfigField label="Card Front / Cover Design">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                {CARD_COVERS.map(cover => (
+                  <button
+                    key={cover.id}
+                    onClick={() => update('coverImage', cover.id)}
+                    style={{
+                      padding: '12px 8px', borderRadius: 8, cursor: 'pointer',
+                      backgroundImage: cover.gradient,
+                      backgroundColor: cover.bgColor,
+                      backgroundSize: cover.bgSize,
+                      backgroundPosition: 'center',
+                      border: form.coverImage === cover.id ? '2px solid white' : '2px solid transparent',
+                      boxShadow: form.coverImage === cover.id ? '0 0 0 2px var(--accent)' : 'none',
+                      color: 'white', fontWeight: 600, fontSize: 11, textAlign: 'center',
+                      textShadow: '0px 1px 3px rgba(0,0,0,0.8)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {cover.label}
+                  </button>
+                ))}
+              </div>
             </ConfigField>
 
-            {!form.isChallenge && (
-              <>
-                <ConfigField label="Topic Title">
-                  <TextConfig value={form.topic || ''} onChange={(v) => update('topic', v)} placeholder="e.g. Next Topic: Science" />
-                </ConfigField>
-                <ConfigField label="Instructions to Host">
-                  <textarea
-                    className="input"
-                    value={form.instructions || ''}
-                    onChange={(e) => update('instructions', e.target.value)}
-                    placeholder="e.g. Ask the audience to name 5 planets..."
-                    rows={3}
-                    style={{ resize: 'vertical' }}
-                  />
-                </ConfigField>
-              </>
-            )}
+            <ConfigField label="Card Details (Shown on Back)">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <TextConfig value={form.icon || '🃏'} onChange={(v) => update('icon', v)} placeholder="Card Icon (Emoji)" />
+                <TextConfig value={form.topic || ''} onChange={(v) => update('topic', v)} placeholder="Topic Title" />
+                <textarea
+                  className="input"
+                  value={form.instructions || ''}
+                  onChange={(e) => update('instructions', e.target.value)}
+                  placeholder="Instructions for the host..."
+                  rows={2}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+            </ConfigField>
 
             {form.isChallenge && (
               <>
-                <ConfigField label="Negative Marking">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <ToggleConfig value={form.negativeMarks} onChange={(v) => update('negativeMarks', v)} />
-                    <span style={{ fontSize: 13 }}>Apply negative marks</span>
-                    {form.negativeMarks && (
-                      <NumberConfig value={form.negativePoints || 5} onChange={(v) => update('negativePoints', v)} min={1} max={50} />
-                    )}
+                <ConfigField label="Scoring configuration">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontSize: 13, width: 140 }}>Points for Correct:</span>
+                      <NumberConfig value={form.points || 10} onChange={(v) => update('points', v)} min={1} max={100} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <ToggleConfig value={form.negativeMarks} onChange={(v) => update('negativeMarks', v)} />
+                      <span style={{ fontSize: 13, width: form.negativeMarks ? 'auto' : 140 }}>Apply negative marks</span>
+                      {form.negativeMarks && (
+                        <>
+                          <span style={{ fontSize: 13, marginLeft: 'auto' }}>Penalty:</span>
+                          <NumberConfig value={form.negativePoints || 5} onChange={(v) => update('negativePoints', v)} min={1} max={100} />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </ConfigField>
 
@@ -1022,7 +1052,7 @@ export default function EventEditor() {
             minHeight: 38, padding: '8px 16px', fontSize: 13,
           }}>
             <Plus size={16} />
-            Add Question
+            {event.type === 'CARD_FLIP' ? 'Add Card' : 'Add Question'}
           </button>
         </div>
 
@@ -1034,10 +1064,10 @@ export default function EventEditor() {
             borderRadius: 12,
           }}>
             <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              No questions yet
+              {event.type === 'CARD_FLIP' ? 'No cards yet' : 'No questions yet'}
             </p>
             <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              Click "Add Question" to start building this event
+              {event.type === 'CARD_FLIP' ? 'Click "Add Card" to create a new flipping card' : 'Click "Add Question" to start building this event'}
             </p>
           </div>
         ) : (
