@@ -243,50 +243,55 @@ const useGameStore = create((set, get) => ({
 
     exportGamePackage: async () => {
         const state = get();
-        const { filePath, gameData } = state;
+        const { gameData } = state;
 
-        if (!isElectron()) {
-            try {
-                // In browser mode, export is basically just downloading the JSON via a Blob
-                const dataStr = JSON.stringify({
-                    version: "1.0",
-                    isExportedPackage: false,
-                    ...gameData
-                }, null, 2);
-
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${gameData?.meta?.title || 'quiz_export'}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                return true;
-            } catch (err) {
-                console.error("Browser export failed", err);
-                alert("Failed to export game: " + err.message);
-                return false;
-            }
-        }
-
-        if (!filePath) {
-            alert('Please save the game to a file first before exporting as a package.');
+        if (!gameData) {
+            alert('No game loaded. Please create or open a game first.');
             return false;
         }
+
         try {
-            const result = await window.electronAPI.file.export({ gameFilePath: filePath });
-            if (result?.success) {
-                return true;
-            } else if (result?.error) {
-                console.error('Export failed:', result.error);
-                alert('Export failed: ' + result.error);
+            // Both browser and Electron: download JSON file directly
+            const dataStr = JSON.stringify({
+                version: "1.0",
+                exportedAt: new Date().toISOString(),
+                ...gameData
+            }, null, 2);
+
+            const title = gameData?.meta?.title || 'quiz_export';
+            // Sanitize filename
+            const safeTitle = title.replace(/[^a-zA-Z0-9_\-. ]/g, '_');
+
+            if (isElectron()) {
+                // In Electron: use IPC to show Save dialog
+                try {
+                    const result = await window.electronAPI.file.exportJSON({
+                        data: dataStr,
+                        defaultName: `${safeTitle}.json`,
+                    });
+                    if (result?.success) return true;
+                    // Fallback to blob download if IPC fails
+                } catch (ipcErr) {
+                    // IPC not available for JSON export — fall through to blob
+                }
             }
+
+            // Blob download (browser + Electron fallback)
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${safeTitle}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            return true;
         } catch (err) {
-            console.error('Failed to export game package:', err);
+            console.error('Export failed', err);
+            alert('Failed to export game: ' + err.message);
+            return false;
         }
-        return false;
     },
 
     importGamePackage: async () => {

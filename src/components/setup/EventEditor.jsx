@@ -386,13 +386,15 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
 
   // Handle media file selection
   const handleMediaSelect = async () => {
+    const currentItemType = form.itemType || 'image';
     if (isElectron) {
-      // Use Electron's file picker
+      // Use Electron's file picker - pass the type so it shows correct filter
       try {
-        const result = await window.electronAPI.file.selectMedia();
-        if (result && result.filePath) {
-          update('mediaFile', result.filePath);
-          setMediaPreview(result.filePath);
+        const result = await window.electronAPI.file.selectMedia(currentItemType);
+        if (result) {
+          update('mediaFile', result);
+          update('mediaFileName', result.split(/[\\/]/).pop());
+          setMediaPreview(result);
         }
       } catch (err) {
         console.error('Failed to select media:', err);
@@ -401,8 +403,7 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
       // Browser fallback: trigger hidden file input
       const input = document.createElement('input');
       input.type = 'file';
-      const itemType = form.itemType || 'image';
-      input.accept = itemType === 'sound' ? 'audio/*' : 'image/*';
+      input.accept = currentItemType === 'sound' ? 'audio/*' : 'image/*';
       input.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {

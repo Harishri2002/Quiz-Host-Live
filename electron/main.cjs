@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, screen, protocol } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, screen, protocol, Menu, shell } = require('electron');
 const path = require('path');
 const fileManager = require('./fileManager.cjs');
 
@@ -63,6 +63,70 @@ app.whenReady().then(() => {
 
     createMainWindow();
 
+    // Build native application menu with About option
+    const menuTemplate = [
+        {
+            label: 'File',
+            submenu: [
+                { role: 'quit', label: 'Exit' }
+            ]
+        },
+        {
+            label: 'Edit',
+            submenu: [
+                { role: 'undo' }, { role: 'redo' }, { type: 'separator' },
+                { role: 'cut' }, { role: 'copy' }, { role: 'paste' }
+            ]
+        },
+        {
+            label: 'View',
+            submenu: [
+                { role: 'reload' },
+                { role: 'toggleDevTools', label: 'Developer Tools' },
+                { type: 'separator' },
+                { role: 'togglefullscreen', label: 'Full Screen' }
+            ]
+        },
+        {
+            label: 'Help',
+            submenu: [
+                {
+                    label: 'Open Documentation',
+                    click: () => shell.openExternal('https://harishri2002.github.io/Quiz-Host-Live')
+                },
+                {
+                    label: 'View on GitHub',
+                    click: () => shell.openExternal('https://github.com/Harishri2002/Quiz-Host-Live')
+                },
+                { type: 'separator' },
+                {
+                    label: 'About Quiz-Host Live',
+                    click: () => {
+                        dialog.showMessageBox(mainWindow, {
+                            type: 'info',
+                            title: 'About Quiz-Host Live',
+                            icon: path.join(__dirname, '..', 'assets', 'icon.png'),
+                            message: 'Quiz-Host Live',
+                            detail: [
+                                'Version: 1.0.0',
+                                'Built by Harishri',
+                                '',
+                                'A professional, feature-rich quiz hosting platform',
+                                'designed for live events, college fests, and real-time competition.',
+                                '',
+                                'GitHub: github.com/Harishri2002/Quiz-Host-Live',
+                            ].join('\n'),
+                            buttons: ['OK'],
+                        });
+                    }
+                }
+            ]
+        }
+    ];
+
+    const menu = Menu.buildFromTemplate(menuTemplate);
+    Menu.setApplicationMenu(menu);
+
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createMainWindow();
@@ -77,6 +141,22 @@ app.on('window-all-closed', () => {
 });
 
 // ── IPC Handlers ──────────────────────────────────────
+
+// Export game JSON via native Save dialog
+ipcMain.handle('file:exportJSON', async (event, { data, defaultName }) => {
+    const result = await dialog.showSaveDialog(mainWindow, {
+        title: 'Export Quiz Game',
+        defaultPath: defaultName || 'quiz_export.json',
+        filters: [{ name: 'JSON File', extensions: ['json'] }],
+    });
+    if (result.canceled) return { success: false };
+    try {
+        require('fs').writeFileSync(result.filePath, data, 'utf8');
+        return { success: true, filePath: result.filePath };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+});
 
 // File Operations
 ipcMain.handle('file:new', async () => {

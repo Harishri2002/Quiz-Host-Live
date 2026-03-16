@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
             ipcRenderer.invoke('file:copyMedia', { sourcePath, gameFilePath }),
         selectMedia: (type) => ipcRenderer.invoke('file:selectMedia', { type }),
         getMediaPath: (gameFilePath) => ipcRenderer.invoke('file:getMediaPath', { gameFilePath }),
+        exportJSON: (opts) => ipcRenderer.invoke('file:exportJSON', opts),
     },
 
     // Window controls
