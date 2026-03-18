@@ -1,4 +1,4 @@
-# Quiz Lab (Quiz-Host-Live)
+# Quiz-Host-Live
 
 <p align="center">
   <img src="assets/icon.png" width="150" alt="Quiz Lab Logo">
@@ -35,7 +35,7 @@ This project uses [Vite](https://vitejs.dev/) for fast frontend tooling and [Ele
 ### Installation
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/your-username/quiz-host-live.git
+    git clone https://github.com/Harishri2002/quiz-host-live.git
     cd quiz-host-live
     ```
 2.  Install dependencies:
