@@ -90,7 +90,20 @@ const useGameStore = create((set, get) => ({
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.qmg,application/json';
+
+            // Hack to detect cancellation
+            const handleFocus = () => {
+                window.removeEventListener('focus', handleFocus);
+                setTimeout(() => {
+                    if (!input.files || input.files.length === 0) {
+                        resolve(false);
+                    }
+                }, 300); // Give input.onchange a chance to fire first
+            };
+            window.addEventListener('focus', handleFocus);
+
             input.onchange = (e) => {
+                window.removeEventListener('focus', handleFocus);
                 const file = e.target.files[0];
                 if (!file) {
                     resolve(false);

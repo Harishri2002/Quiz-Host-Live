@@ -1,10 +1,119 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, FolderOpen, Clock, ChevronRight, Sparkles, Download } from 'lucide-react';
+import { Plus, FolderOpen, Clock, ChevronRight, Sparkles, Download, X, FileJson } from 'lucide-react';
 import useGameStore from '../../store/gameStore';
 import useUIStore from '../../store/uiStore';
-
 import CanvasParticles from '../common/CanvasParticles';
+
+// ── Load Game Modal ──────────────────────────────────────
+function LoadGameModal({ recentGames, loading, onOpen, onOpenFromFile, onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 24,
+      }}
+    >
+      <motion.div
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        style={{
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border)',
+          borderRadius: 16,
+          padding: '28px 28px',
+          width: '100%', maxWidth: 480,
+          maxHeight: '80vh', overflow: 'auto',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700 }}>Load Game</h2>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Open from file */}
+        <button
+          onClick={onOpenFromFile}
+          disabled={loading}
+          style={{
+            width: '100%', padding: '14px 18px', borderRadius: 10, marginBottom: 20,
+            background: 'rgba(108,99,255,0.12)', border: '1px dashed rgba(108,99,255,0.4)',
+            color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+            gap: 10, fontWeight: 600, fontSize: 14, transition: 'background 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(108,99,255,0.22)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(108,99,255,0.12)'}
+        >
+          <FolderOpen size={18} />
+          Browse for file… (.qmg or .json)
+        </button>
+
+        {/* Recent Games */}
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 10 }}>
+          Recent Games
+        </div>
+
+        {recentGames.length === 0 ? (
+          <div style={{
+            textAlign: 'center', padding: '32px 16px',
+            color: 'var(--text-muted)', background: 'var(--bg-card)',
+            borderRadius: 12, border: '1px dashed var(--border)',
+            fontSize: 14,
+          }}>
+            No recent games found.<br />
+            <span style={{ fontSize: 12 }}>Create a new game or browse for a file above.</span>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {recentGames.map((game) => {
+              const title = game.title || 'Untitled Quiz';
+              const date = new Date(game.lastOpened).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric',
+              });
+              return (
+                <motion.button
+                  key={game.filePath}
+                  disabled={loading}
+                  onClick={() => onOpen(game.filePath)}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '14px 16px', borderRadius: 10, width: '100%',
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    cursor: 'pointer', color: 'var(--text-primary)', textAlign: 'left',
+                    transition: 'border-color 0.2s',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>{title}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Clock size={11} />
+                      {date}
+                    </div>
+                  </div>
+                  <ChevronRight size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
 
 function RecentGameCard({ game, onOpen }) {
   const title = game.title || 'Untitled Quiz';
@@ -122,11 +231,25 @@ export default function LaunchScreen() {
     }
   }, [openGameByPath, navigateTo]);
 
-  const [showLocalGames, setShowLocalGames] = useState(false);
-  const handleToggleLoadGame = () => {
-    setShowLocalGames(!showLocalGames);
-    if (!showLocalGames) loadRecent();
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const handleOpenLoadModal = () => {
+    setShowLoadModal(true);
+    loadRecent();
   };
+  const handleCloseLoadModal = () => setShowLoadModal(false);
+
+  const handleOpenFromFile = useCallback(async () => {
+    handleCloseLoadModal();
+    setLoading(true);
+    try {
+      const success = await openGame();
+      if (success) {
+        navigateTo('setup');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [openGame, navigateTo]);
 
   return (
     <div style={{
@@ -278,7 +401,7 @@ export default function LaunchScreen() {
 
           <motion.button
             className="btn btn-secondary"
-            onClick={handleToggleLoadGame}
+            onClick={handleOpenLoadModal}
             disabled={loading}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -324,46 +447,16 @@ export default function LaunchScreen() {
           </motion.button>
         </motion.div>
 
-        {/* Saved Games */}
+        {/* Load Game Modal */}
         <AnimatePresence>
-          {(showLocalGames || recentGames.length > 0) && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ delay: 0.1, duration: 0.4 }}
-              style={{ width: '100%', maxWidth: 440 }}
-            >
-              <h3 style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: 1.5,
-                marginBottom: 12,
-              }}>
-                Saved Games
-              </h3>
-              
-              {recentGames.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 12, border: '1px dashed var(--border)' }}>
-                  No local saved games found.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {recentGames.map((game, i) => (
-                    <motion.div
-                      key={game.filePath}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 + i * 0.05 }}
-                    >
-                      <RecentGameCard game={game} onOpen={handleOpenRecent} />
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
+          {showLoadModal && (
+            <LoadGameModal
+              recentGames={recentGames}
+              loading={loading}
+              onOpen={handleOpenRecent}
+              onOpenFromFile={handleOpenFromFile}
+              onClose={handleCloseLoadModal}
+            />
           )}
         </AnimatePresence>
       </motion.div>

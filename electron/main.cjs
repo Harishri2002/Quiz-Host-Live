@@ -173,7 +173,11 @@ ipcMain.handle('file:new', async () => {
 ipcMain.handle('file:open', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
         title: 'Open Quiz Game',
-        filters: [{ name: 'Quiz-Host Live Game', extensions: ['qmg'] }],
+        filters: [
+            { name: 'Quiz-Host Live Files', extensions: ['qmg', 'json'] },
+            { name: 'Quiz-Host Game (.qmg)', extensions: ['qmg'] },
+            { name: 'JSON Export (.json)', extensions: ['json'] },
+        ],
         properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return null;
