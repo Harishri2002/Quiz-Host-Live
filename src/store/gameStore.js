@@ -363,6 +363,21 @@ const useGameStore = create((set, get) => ({
 
     // ── Settings ───────────────────────────
 
+    resetScores: () => {
+        set((s) => {
+            const teams = s.gameData?.meta?.teams || [];
+            const zeroScores = {};
+            teams.forEach((team) => { zeroScores[team] = 0; });
+            return {
+                gameData: {
+                    ...s.gameData,
+                    state: { ...s.gameData.state, scores: zeroScores },
+                },
+                isDirty: true,
+            };
+        });
+    },
+
     updateSettings: (updates) => {
         set((s) => ({
             gameData: {

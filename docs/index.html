@@ -1,14 +1,246 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quiz-Host Live — Documentation</title>
-    <meta name="description" content="Complete documentation for Quiz-Host Live — the professional quiz hosting software." />
-    <link rel="icon" type="image/png" href="../assets/icon.png" />
-    <script type="module" src="./src/main.jsx"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz-Host Live — Documentation</title>
+  <meta name="description" content="Complete guide for Quiz-Host Live — a professional quiz hosting application for live events." />
+  <link rel="icon" href="https://raw.githubusercontent.com/Harishri2002/Quiz-Host-Live/main/assets/icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f1a; --bg2: #16162a; --bg3: #1e1e38;
+      --border: rgba(255,255,255,0.08); --accent: #6c63ff; --accent2: #00d4ff;
+      --text: #e8e8f0; --muted: #7a7d9e; --radius: 14px;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; line-height: 1.6; font-size: 16px; }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* Header */
+    header { position: sticky; top: 0; z-index: 100; background: rgba(15,15,26,0.85); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; color: #fff; text-decoration: none; }
+    .nav-logo img { width: 34px; height: 34px; border-radius: 8px; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .nav-gh { background: var(--accent); color: #fff !important; padding: 7px 18px; border-radius: 8px; }
+
+    /* Hero */
+    .hero { padding: 100px 0 80px; text-align: center; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.3); border-radius: 100px; padding: 6px 18px; font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 28px; }
+    .hero h1 { font-size: clamp(40px, 7vw, 72px); font-weight: 900; line-height: 1.08; letter-spacing: -2px; margin-bottom: 20px; }
+    .hero h1 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero p { font-size: 18px; color: var(--muted); max-width: 580px; margin: 0 auto 40px; }
+    .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-p { background: var(--accent); color: #fff; padding: 14px 32px; border-radius: 10px; font-weight: 700; font-size: 15px; transition: opacity .2s; }
+    .btn-p:hover { opacity: .85; text-decoration: none; }
+    .btn-o { border: 1px solid var(--border); color: var(--text); padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; transition: background .2s; }
+    .btn-o:hover { background: var(--bg3); text-decoration: none; }
+
+    /* Section */
+    section.sect { padding: 80px 0; }
+    section.sect.alt { background: var(--bg2); }
+    .sh { text-align: center; margin-bottom: 56px; }
+    .sh-tag { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 12px; }
+    .sh h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; }
+    .sh p { font-size: 16px; color: var(--muted); margin-top: 10px; }
+
+    /* Features */
+    .grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; transition: border-color .2s, transform .2s; }
+    .card:hover { border-color: rgba(108,99,255,0.4); transform: translateY(-3px); }
+    .ci { font-size: 32px; margin-bottom: 14px; }
+    .card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .card p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* Rounds */
+    .rounds { display: flex; flex-direction: column; gap: 14px; }
+    .round { display: flex; align-items: flex-start; gap: 18px; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; transition: border-color .2s; }
+    .round:hover { border-color: rgba(0,212,255,0.3); }
+    .rbadge { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 700; color: var(--accent2); white-space: nowrap; flex-shrink: 0; }
+    .round p { font-size: 14px; color: var(--muted); margin-top: 2px; }
+    .round strong { font-size: 14px; font-weight: 600; display: block; margin-bottom: 2px; }
+
+    /* Steps */
+    .steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    .step { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 22px; }
+    .num { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900; margin-bottom: 14px; color: #fff; }
+    .step h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .step p { font-size: 13px; color: var(--muted); }
+
+    /* FAQ */
+    .faq { display: flex; flex-direction: column; gap: 12px; max-width: 800px; margin: 0 auto; }
+    .fi { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; }
+    .fq { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .fa { font-size: 14px; color: var(--muted); }
+
+    /* CTA */
+    .cta-box { background: linear-gradient(135deg,rgba(108,99,255,.12),rgba(0,212,255,.08)); border: 1px solid rgba(108,99,255,.2); border-radius: 20px; padding: 60px 40px; text-align: center; }
+    .cta-box h2 { font-size: 36px; font-weight: 800; margin-bottom: 12px; }
+    .cta-box p { color: var(--muted); margin-bottom: 32px; }
+    .dl-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .dl { display: flex; align-items: center; gap: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px 22px; font-weight: 600; color: var(--text); transition: border-color .2s; }
+    .dl:hover { border-color: var(--accent); text-decoration: none; }
+    .dl .ico { font-size: 26px; }
+    .dl small { display: block; font-size: 10px; color: var(--muted); }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--border); padding: 40px 0; text-align: center; color: var(--muted); font-size: 13px; }
+
+    @media(max-width:600px){ .nav-links{display:none;} .hero{padding:60px 0 50px;} .round{flex-direction:column;} }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<header>
+  <div class="container">
+    <nav class="nav">
+      <a class="nav-logo" href="#">
+        <img src="https://raw.githubusercontent.com/Harishri2002/Quiz-Host-Live/main/assets/icon.png" alt="Logo" onerror="this.style.display='none'" />
+        Quiz-Host Live
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#rounds">Round Types</a>
+        <a href="#guide">Guide</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/Harishri2002/Quiz-Host-Live" target="_blank" class="nav-gh">GitHub</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="container">
+    <div class="badge">⚡ Version 1.0.0 — Available Now</div>
+    <h1>Host <span>Professional</span><br />Quiz Events</h1>
+    <p>Quiz-Host Live is a powerful, broadcast-ready desktop application for live quiz events, college fests, and team competitions.</p>
+    <div class="hero-btns">
+      <a href="https://github.com/Harishri2002/Quiz-Host-Live/releases" target="_blank" class="btn-p">⬇ Download Now</a>
+      <a href="https://github.com/Harishri2002/Quiz-Host-Live" target="_blank" class="btn-o">View Source →</a>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="sect alt" id="features">
+  <div class="container">
+    <div class="sh">
+      <div class="sh-tag">Features</div>
+      <h2>Everything you need to run a great quiz</h2>
+      <p>Designed for real live events, not just practice sessions.</p>
+    </div>
+    <div class="grid3">
+      <div class="card"><div class="ci">🎮</div><h3>Multiple Round Types</h3><p>8 unique, fully configurable round formats for any quiz style.</p></div>
+      <div class="card"><div class="ci">🖥️</div><h3>Native Desktop App</h3><p>Available as a native Windows (.exe) and macOS (.dmg) installer.</p></div>
+      <div class="card"><div class="ci">💾</div><h3>Save & Load</h3><p>Save your entire quiz as a portable JSON file. Reload and edit anytime.</p></div>
+      <div class="card"><div class="ci">🔊</div><h3>SFX & Audio</h3><p>Built-in sound effect manager for buzzers, correct answers, and transitions.</p></div>
+      <div class="card"><div class="ci">🏆</div><h3>Live Scoreboard</h3><p>Real-time scoreboard overlay with full-screen mode support.</p></div>
+      <div class="card"><div class="ci">🎨</div><h3>Themes & Customization</h3><p>Multiple visual themes — Dark Galaxy, Neon Pulse, Ocean Depths, and more.</p></div>
+      <div class="card"><div class="ci">📁</div><h3>Media Embed</h3><p>Attach images and audio clips directly inside questions — no external links needed.</p></div>
+      <div class="card"><div class="ci">👥</div><h3>Team Management</h3><p>Configure up to 8 teams with custom names, add/remove freely any time.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ROUNDS -->
+<section class="sect" id="rounds">
+  <div class="container">
+    <div class="sh">
+      <div class="sh-tag">Round Types</div>
+      <h2>8 Unique Event Formats</h2>
+      <p>Mix and match for the perfect show flow.</p>
+    </div>
+    <div class="rounds">
+      <div class="round"><div class="rbadge">Q&amp;A Round</div><div><strong>Classic Q&amp;A</strong><p>Text, image, or audio questions. Teams answer in turn or buzz in.</p></div></div>
+      <div class="round"><div class="rbadge">Identify Round</div><div><strong>Image &amp; Sound Identification</strong><p>Show a blurred image or play a sound clip. Teams identify it before the reveal.</p></div></div>
+      <div class="round"><div class="rbadge">Buzzer Round</div><div><strong>First-to-Buzz</strong><p>First team to buzz in gets to answer. Wrong? Others get a chance.</p></div></div>
+      <div class="round"><div class="rbadge">Lightning Round</div><div><strong>Rapid-fire per Team</strong><p>Consecutive questions directed at specific teams. Configure per-team counts and timers.</p></div></div>
+      <div class="round"><div class="rbadge">Wipeout Round</div><div><strong>Wagering</strong><p>Teams commit points before answering. One wrong answer wipes their wager entirely.</p></div></div>
+      <div class="round"><div class="rbadge">Rapid Fire Duel</div><div><strong>Head-to-Head</strong><p>Pick 2 teams for a showdown. Both race through questions with a shared timer.</p></div></div>
+      <div class="round"><div class="rbadge">Card Flip Round</div><div><strong>Challenge Cards</strong><p>Teams pick from a custom card grid. Each card hides a mini-quiz challenge.</p></div></div>
+      <div class="round"><div class="rbadge">Master Questions</div><div><strong>Multi-point Deduction</strong><p>Teams can ask for hints. The more hints used, the fewer points available.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GUIDE -->
+<section class="sect alt" id="guide">
+  <div class="container">
+    <div class="sh">
+      <div class="sh-tag">Getting Started</div>
+      <h2>Up and running in minutes</h2>
+      <p>Follow these steps to host your first event.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><h3>Install the App</h3><p>Download and run the Windows .exe or macOS .dmg from the releases page.</p></div>
+      <div class="step"><div class="num">2</div><h3>Create a Game</h3><p>Click "Create New Game," set the title, teams, logo, and choose a theme.</p></div>
+      <div class="step"><div class="num">3</div><h3>Add Events</h3><p>Open the Event Editor and add rounds in any order. Each round type has its own config.</p></div>
+      <div class="step"><div class="num">4</div><h3>Sequence Your Show</h3><p>Drag and reorder events in the Sequence Builder to craft your perfect flow.</p></div>
+      <div class="step"><div class="num">5</div><h3>Start the Game</h3><p>Hit "Start Game" and control each round live from the host dashboard.</p></div>
+      <div class="step"><div class="num">6</div><h3>Export &amp; Share</h3><p>Use "Export Package" to download your quiz as a shareable JSON file.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="sect" id="faq">
+  <div class="container">
+    <div class="sh">
+      <div class="sh-tag">FAQ</div>
+      <h2>Frequently Asked Questions</h2>
+    </div>
+    <div class="faq">
+      <div class="fi"><div class="fq">Can I use my own images and audio?</div><div class="fa">Yes! In the question editor, switch the Media Type toggle to Image or Sound and upload any local file. Files are embedded as base64 in the save file for portability.</div></div>
+      <div class="fi"><div class="fq">How do I uninstall on Windows?</div><div class="fa">Open Control Panel → Programs → Uninstall a program, find "Quiz-Host Live" and click Uninstall. You can also use Settings → Apps on Windows 11.</div></div>
+      <div class="fi"><div class="fq">Can I run it without internet?</div><div class="fa">Fully offline. All data is stored locally. An internet connection is only required to load Google Fonts in the UI.</div></div>
+      <div class="fi"><div class="fq">Can I use it with a projector?</div><div class="fa">Yes — run the app on your laptop and extend/duplicate to the projector screen. Use View → Full Screen for a clean audience display.</div></div>
+      <div class="fi"><div class="fq">Can I save and resume a game later?</div><div class="fa">Yes. Press Ctrl+S or click "Save Game" at any time. Your quiz, sequences, and scores are all saved to your local .qmg file.</div></div>
+      <div class="fi"><div class="fq">How do I import a quiz someone shared?</div><div class="fa">On the launch screen, click "Import" and select the .json file. The game loads immediately with all settings intact.</div></div>
+      <div class="fi"><div class="fq">How do I reset scores mid-game?</div><div class="fa">Go to Game Info panel (in Setup) and scroll to the bottom. There's a red "Reset Scores" button that zeros out all team scores instantly.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD CTA -->
+<section class="sect alt">
+  <div class="container">
+    <div class="cta-box">
+      <h2>Ready to host your first event?</h2>
+      <p>Download Quiz-Host Live free. Works on Windows and macOS.</p>
+      <div class="dl-row">
+        <a href="https://github.com/Harishri2002/Quiz-Host-Live/releases" target="_blank" class="dl">
+          <span class="ico">🪟</span>
+          <div><small>Download for</small>Windows (.exe)</div>
+        </a>
+        <a href="https://github.com/Harishri2002/Quiz-Host-Live/releases" target="_blank" class="dl">
+          <span class="ico">🍎</span>
+          <div><small>Download for</small>macOS (.dmg)</div>
+        </a>
+        <a href="https://github.com/Harishri2002/Quiz-Host-Live" target="_blank" class="dl">
+          <span class="ico">📦</span>
+          <div><small>View source on</small>GitHub</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p>Built with ❤️ by <a href="https://github.com/Harishri2002" target="_blank">Harishri</a> &nbsp;·&nbsp; Quiz-Host Live v1.0.0 &nbsp;·&nbsp; <a href="https://github.com/Harishri2002/Quiz-Host-Live" target="_blank">GitHub</a></p>
+  </div>
+</footer>
+
+</body>
 </html>

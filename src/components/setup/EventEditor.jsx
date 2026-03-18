@@ -485,6 +485,7 @@ function QuestionEditModal({ eventType, question, onClose, onSave, teamCount, op
                   <button
                     key={opt.value}
                     onClick={() => {
+                      setItemType(opt.value);
                       update('itemType', opt.value);
                       handleClearMedia(); // clear if type changes
                     }}

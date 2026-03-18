@@ -10,6 +10,7 @@ export default function GameInfoPanel() {
   const updateTeams = useGameStore((s) => s.updateTeams);
   const updateSettings = useGameStore((s) => s.updateSettings);
   const updateMeta = useGameStore((s) => s.updateMeta);
+  const resetScores = useGameStore((s) => s.resetScores);
 
   const teams = gameData?.meta?.teams || [];
   const themeList = getThemeList();
@@ -340,6 +341,44 @@ export default function GameInfoPanel() {
         </div>
       </section>
 
+      {/* Reset Scoreboard */}
+      <section style={{ marginBottom: 32 }}>
+        <label style={{
+          display: 'block', fontSize: 13, fontWeight: 600,
+          color: 'var(--text-secondary)', marginBottom: 8,
+          textTransform: 'uppercase', letterSpacing: 1,
+        }}>
+          Scoreboard
+        </label>
+        <div style={{
+          background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)',
+          borderRadius: 10, padding: '16px 18px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+        }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>Reset All Scores to Zero</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Sets every team's score back to 0. This cannot be undone.</div>
+          </div>
+          <button
+            className="btn"
+            onClick={() => {
+              if (window.confirm('Reset all team scores to 0? This cannot be undone.')) {
+                resetScores();
+              }
+            }}
+            style={{
+              background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)',
+              color: '#f87171', borderRadius: 8, padding: '8px 18px',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap',
+              flexShrink: 0, transition: 'background 0.2s',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.3)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
+          >
+            🔄 Reset Scores
+          </button>
+        </div>
+      </section>
 
     </div>
   );
